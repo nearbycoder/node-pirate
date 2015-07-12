@@ -4,6 +4,7 @@
   "description": "Pirate Bay Search and Download",
   "bin" : "node-pirate.js",
   "author": "nearbycoder",
+  "url": "https://github.com/nearbycoder/node-pirate",
   "dependencies": {
     "cheerio": "latest",
     "cli-table": "^0.3.1",
