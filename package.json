@@ -1,8 +1,8 @@
 {
   "name": "node-pirate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pirate Bay Search and Download",
-  "bin" : "node-pirate.js",
+  "bin": "node-pirate.js",
   "author": "nearbycoder",
   "url": "https://github.com/nearbycoder/node-pirate",
   "dependencies": {
