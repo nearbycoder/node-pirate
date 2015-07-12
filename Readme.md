@@ -2,6 +2,8 @@
 
 #### essential command line tool to search and download legal torrents from Pirate Bay
 
+```npm install node-pirate -g```
+
  Usage: node-pirate [options] [command]
 
 
