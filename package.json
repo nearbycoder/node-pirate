@@ -1,15 +1,15 @@
 {
   "name": "node-pirate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Pirate Bay Search and Download",
   "bin": "node-pirate.js",
   "author": "nearbycoder",
   "url": "https://github.com/nearbycoder/node-pirate",
-  "repository" :
-    { "type" : "git",
-      "url" : "https://github.com/nearbycoder/node-pirate"
-    },
-  "license" : "(ISC OR GPL-3.0)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nearbycoder/node-pirate"
+  },
+  "license": "(ISC OR GPL-3.0)",
   "dependencies": {
     "cheerio": "latest",
     "cli-table": "^0.3.1",
