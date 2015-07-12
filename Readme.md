@@ -1,3 +1,7 @@
+## node-pirate
+
+#### essential command line tool to search and download legal torrents from Pirate Bay
+
  Usage: node-pirate [options] [command]
 
 
