@@ -1,6 +1,6 @@
 {
   "name": "node-pirate",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Pirate Bay Search and Download",
   "bin": "node-pirate.js",
   "author": "nearbycoder",
