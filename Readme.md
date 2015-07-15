@@ -4,6 +4,8 @@
 
 ```npm install node-pirate -g```
 
+##### feel free to fork or add a pull request. I am open for suggestions
+
  Usage: node-pirate [options] [command]
 
 
