@@ -50,13 +50,25 @@ if(_.isUndefined(argv.order)){
 
 if(prompts.length){
 	inquirer.prompt(prompts, function(answers){
-		Search(_.assign(argv,answers))
+		var url = 'https://thepiratebay.se';
+		request(url, function(error, response, html){
+			var realUrl = response.socket._httpMessage._header.split('\n')[1].replace('referer:', '').replace(/\r/, '');
+			Search(_.assign(argv,answers), realUrl)
+		});
 	});
 }else{
-	Search(argv);
+	var url = 'https://thepiratebay.se';
+	request(url, function(error, response, html){
+		var realUrl = response.socket._httpMessage._header.split('\n')[1].replace('referer:', '').replace(/\r/, '');
+		Search(argv, realUrl);
+	});
 }
 
-function Search(argv){
+function Search(argv, realUrl){
+	if(_.includes(realUrl, 'host')){
+		return console.log('site down'.red);
+	}
+
 	switch(argv.category) {
 		case 'movies':
 			var searchType = 200;
@@ -86,12 +98,10 @@ function Search(argv){
 			var order = 99;
 		break;
 	}
-	// Let's scrape Anchorman 2
-	url = 'https://thepiratebay.la/search/'+ encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
+	var url = realUrl + 'search/' + encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
-
 			var title, release, rating;
 			var json = [];
 			var x = 0;
@@ -100,7 +110,6 @@ function Search(argv){
 			  style: { 'padding-left': 0, 'padding-right': 0 }
 			});
 			$('.detName').each(function(){
-				
         var data = $(this);
         var type = data.parent().parent().find('.vertTh').children('center').children('a').text();
         var title = data.children('.detLink').text();

@@ -41,15 +41,27 @@ if(_.isUndefined(argv.id)){
 }
 if(prompts.length){
 	inquirer.prompt(prompts, function(answers){
-		Download(_.assign(argv,answers))
+		url = 'https://thepiratebay.se';
+		request(url, function(error, response, html){
+			var realUrl = response.socket._httpMessage._header.split('\n')[1].replace('referer:', '').replace(/\r/, '');
+			Download(_.assign(argv,answers), realUrl)
+		});
 	});
 }else{
-	Download(argv);
+	url = 'https://thepiratebay.se';
+	request(url, function(error, response, html){
+		var realUrl = response.socket._httpMessage._header.split('\n')[1].replace('referer:', '').replace(/\r/, '');
+		Download(argv, realUrl);
+	});
 }
 
-function Download(argv){
+function Download(argv, realUrl){
 
-	url = 'https://thepiratebay.la/torrent/'+ argv.id + '/';
+	if(_.includes(realUrl, 'host')){
+		return console.log('site down');
+	}
+
+	var url = realUrl + 'torrent/'+ argv.id + '/';
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
