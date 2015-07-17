@@ -87,7 +87,7 @@ function Search(argv){
 		break;
 	}
 	// Let's scrape Anchorman 2
-	url = 'https://thepiratebay.am/search/'+ encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
+	url = 'https://thepiratebay.la/search/'+ encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);

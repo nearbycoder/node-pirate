@@ -49,7 +49,7 @@ if(prompts.length){
 
 function Download(argv){
 
-	url = 'https://thepiratebay.am/torrent/'+ argv.id + '/';
+	url = 'https://thepiratebay.la/torrent/'+ argv.id + '/';
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
