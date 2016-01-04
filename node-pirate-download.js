@@ -56,12 +56,13 @@ if(prompts.length){
 }
 
 function Download(argv, realUrl){
-
-	if(_.includes(realUrl, 'host')){
-		return console.log('site down');
+	if(_.includes(realUrl, 'host') && !_.includes(realUrl, 'thepiratebay.se')){
+		return console.log('site down'.red);
+	} else if(_.includes(realUrl, 'thepiratebay.se')) {
+		realUrl = 'https://thepiratebay.se';
 	}
 
-	var url = realUrl + 'torrent/'+ argv.id + '/';
+	var url = realUrl + '/torrent/'+ argv.id + '/';
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
@@ -91,7 +92,7 @@ function Download(argv, realUrl){
 							    total: engine.torrent.length
 							  });
 				});
-				engine.on('download', function(piece){  
+				engine.on('download', function(piece){ 
 					if(typeof oldvalue != "undefined"){
 						engine.swarm.downloaded = engine.swarm.downloaded - oldvalue;
 					}

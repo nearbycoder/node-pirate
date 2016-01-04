@@ -12,14 +12,14 @@
   "license": "(ISC OR GPL-3.0)",
   "dependencies": {
     "cheerio": "latest",
-    "cli-table": "^0.3.1",
-    "colors": "^1.1.2",
-    "commander": "^2.8.1",
-    "homedir": "^0.6.0",
-    "inquirer": "^0.8.5",
-    "lodash": "^3.10.0",
-    "progress": "^1.1.8",
-    "request": "latest",
-    "torrent-stream": "^0.21.0"
+    "cli-table": "*",
+    "colors": "*",
+    "commander": "*",
+    "homedir": "*",
+    "inquirer": "^0.11.1",
+    "lodash": "*",
+    "progress": "*",
+    "request": "*",
+    "torrent-stream": "^1.0.0"
   }
 }

@@ -65,8 +65,10 @@ if(prompts.length){
 }
 
 function Search(argv, realUrl){
-	if(_.includes(realUrl, 'host')){
+	if(_.includes(realUrl, 'host') && !_.includes(realUrl, 'thepiratebay.se')){
 		return console.log('site down'.red);
+	} else if(_.includes(realUrl, 'thepiratebay.se')) {
+		realUrl = 'https://thepiratebay.se';
 	}
 
 	switch(argv.category) {
@@ -98,7 +100,7 @@ function Search(argv, realUrl){
 			var order = 99;
 		break;
 	}
-	var url = realUrl + 'search/' + encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
+	var url = realUrl + '/search/' + encodeURI(argv.title) +'/0/'+ order +'/' + searchType;
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
