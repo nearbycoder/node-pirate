@@ -1,13 +1,13 @@
 {
   "name": "node-pirate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A resilient OpenTUI client for discovering legal torrent metadata indexed by The Pirate Bay",
   "type": "module",
   "bin": {
     "node-pirate": "dist/node-pirate.js"
   },
   "files": [
-    "dist",
+    "dist/node-pirate.js",
     "Readme.md"
   ],
   "scripts": {
@@ -22,7 +22,7 @@
   "engines": {
     "bun": ">=1.2.0"
   },
-  "packageManager": "npm@10.9.7",
+  "packageManager": "npm@11.16.0",
   "author": "nearbycoder",
   "homepage": "https://github.com/nearbycoder/node-pirate",
   "repository": {
@@ -31,11 +31,11 @@
   },
   "license": "(ISC OR GPL-3.0-only)",
   "dependencies": {
-    "@opentui/core": "^0.4.3",
-    "commander": "^15.0.0"
+    "@opentui/core": "0.4.5",
+    "commander": "15.0.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^7.0.2"
+    "@types/bun": "1.3.14",
+    "typescript": "7.0.2"
   }
 }

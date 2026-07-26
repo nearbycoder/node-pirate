@@ -568,6 +568,7 @@ test("question mark opens a non-destructive in-app help modal", async () => {
   setup.mockInput.pressKey("q")
   await setup.renderOnce()
   expect(app.input.focused).toBeTrue()
+  expect(app.input.value).toBe("")
   app.destroy()
 })
 

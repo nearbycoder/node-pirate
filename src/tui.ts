@@ -30,6 +30,7 @@ import {
 import { formatDetails, formatResultHeader, formatResultLine, resultSortAtColumn, resultSortColumns } from "./format.ts"
 import { createMagnetUri } from "./magnet.ts"
 import { createImdbSearchUrl } from "./imdb.ts"
+import { sanitizeMultiline, sanitizeSingleLine } from "./text.ts"
 
 const CATEGORY_CYCLE: ReadonlyArray<readonly [string, CategoryFilter]> = categoryGroups.map((group) => [
   group.name === "video" ? "video (all)" : group.name,
@@ -331,8 +332,12 @@ export function createTui(
   }
 
   function setStatus(message: string, error = false): void {
-    status.content = ` ${message}`
+    status.content = ` ${sanitizeSingleLine(message)}`
     status.fg = error ? "#FF7A90" : "#8DA7B1"
+  }
+
+  function safeErrorMessage(error: unknown): string {
+    return sanitizeSingleLine(error instanceof Error ? error.message : String(error))
   }
 
   function updateModeTabs(): void {
@@ -556,8 +561,9 @@ export function createTui(
       setStatus(`Details via ${new URL(response.endpoint).host}`)
     } catch (error) {
       if (request.signal.aborted || !modal.visible || modalMode !== "details" || modalTorrent?.id !== torrent.id) return
-      setModalContent(torrent, `Could not load full details: ${error instanceof Error ? error.message : String(error)}`)
-      setStatus(error instanceof Error ? error.message : String(error), true)
+      const message = safeErrorMessage(error)
+      setModalContent(torrent, `Could not load full details: ${message}`)
+      setStatus(message, true)
     } finally {
       if (activeDetailsRequest === request) activeDetailsRequest = undefined
     }
@@ -638,7 +644,7 @@ export function createTui(
       showResponse(response, `result${available === 1 ? "" : "s"}`)
     } catch (error) {
       if (request.signal.aborted || activeRequest !== request) return
-      setStatus(error instanceof Error ? error.message : String(error), true)
+      setStatus(safeErrorMessage(error), true)
       input.focus()
     } finally {
       if (activeRequest === request) activeRequest = undefined
@@ -670,7 +676,7 @@ export function createTui(
       showResponse(response, `top download${available === 1 ? "" : "s"}`, !preserveQueryFocus)
     } catch (error) {
       if (request.signal.aborted || activeRequest !== request) return
-      setStatus(error instanceof Error ? error.message : String(error), true)
+      setStatus(safeErrorMessage(error), true)
     } finally {
       if (activeRequest === request) activeRequest = undefined
     }
@@ -762,7 +768,8 @@ export function createTui(
 
   function setModalContent(torrent: TorrentSummary, body: string, magnet?: string): void {
     const imdbUrl = createImdbSearchUrl(torrent)
-    modalDetails.content = t`${formatDetails(torrent)}\n\n${body}${magnet ? `\n\nMagnet link:\n${magnet}` : ""}\n\nIMDb title search: ${link(imdbUrl)(imdbUrl)}\n\nUse ↑/↓ or the mouse wheel to scroll. Tab selects actions; Enter activates. Press m to copy magnet, u to copy IMDb search, v to show magnet, or Esc to close.`
+    const safeBody = sanitizeMultiline(body)
+    modalDetails.content = t`${formatDetails(torrent)}\n\n${safeBody}${magnet ? `\n\nMagnet link:\n${magnet}` : ""}\n\nIMDb title search: ${link(imdbUrl)(imdbUrl)}\n\nUse ↑/↓ or the mouse wheel to scroll. Tab selects actions; Enter activates. Press m to copy magnet, u to copy IMDb search, v to show magnet, or Esc to close.`
   }
 
   function rememberModalFocus(): void {
@@ -815,7 +822,11 @@ export function createTui(
       else if (modalMode === "details" && (key.name === "return" || key.name === "enter" || key.name === "space" || key.sequence === " ")) {
         if (activateFocusedModalAction()) key.preventDefault()
       }
-      else if (key.name === "escape" || key.name === "q" || (modalMode === "help" && key.name === "?")) closeModal()
+      else if (key.name === "escape" || key.name === "q" || (modalMode === "help" && key.name === "?")) {
+        key.preventDefault()
+        key.stopPropagation()
+        closeModal()
+      }
       else if (modalMode === "details" && key.name === "m") copySelectedMagnet()
       else if (modalMode === "details" && key.name === "u") copyImdbLink()
       else if (modalMode === "details" && key.name === "v") showSelectedMagnet()

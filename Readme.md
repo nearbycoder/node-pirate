@@ -4,6 +4,15 @@ A modern terminal client for searching legal torrents indexed by The Pirate Bay.
 
 Only search for and download content you have the legal right to access.
 
+## Security hardening in 1.0.1
+
+- Torrent IDs are restricted to bounded ASCII digits before they reach terminal output or follow-up requests
+- Remote text is length-bounded, normalized to well-formed Unicode, and stripped of ANSI, OSC, C0/C1, and bidirectional formatting controls
+- API responses are streamed with a 4 MiB limit, and result arrays are capped at 5,000 entries before parsing or sorting
+- Redirects are followed manually for at most three hops and must remain on the configured endpoint's origin
+- Endpoint credentials stay private, are redacted from public state and diagnostics, and require HTTPS except for loopback development
+- CI verifies the locked dependency tree, known advisories, registry signatures, tests, production build, and exact npm package contents
+
 ## What changed in 1.0
 
 - Full-screen OpenTUI search, daily/weekly top downloads, result navigation, detail preview, and magnet retrieval
@@ -112,7 +121,7 @@ Mouse controls:
 | Click `Copy IMDb search` | Copy an IMDb search URL generated from the torrent title |
 | Click `Close` | Close the modal and return to the full-width table |
 
-If OSC 52 clipboard access is unavailable, the magnet action shows the complete link in the modal so it can still be copied. Human-readable dates use `MM/DD/YYYY`; JSON output retains ISO timestamps.
+If OpenTUI cannot emit OSC 52, the magnet action shows the complete link in the modal so it can still be copied. Some terminals and multiplexers silently block clipboard sequences even after accepting them; use **Show link** if the clipboard does not change. Human-readable dates use `MM/DD/YYYY`; JSON output retains ISO timestamps.
 
 Magnet output uses the canonical Deluge-compatible prefix `magnet:?xt=urn:btih:...` without percent-encoding the `urn:btih:` portion. The display name and tracker values remain safely encoded.
 
@@ -199,7 +208,9 @@ node-pirate \
 
 Endpoints are tried in order. When one succeeds it becomes preferred for later requests in the same process. Timeouts, non-2xx responses, HTML responses, invalid JSON, and invalid torrent payloads all cause an automatic attempt against the next endpoint.
 
-Authenticated endpoint URLs are supported. Embedded usernames, passwords, or tokens are decoded and sent as HTTP Basic authorization while the request URL itself remains credential-free. They are also removed from human output, JSON responses, health reports, resolved configuration, and aggregate errors. This prevents copied diagnostics and CI logs from leaking proxy credentials. Use HTTPS for authenticated remote endpoints because Basic authorization encodes credentials but does not encrypt them.
+Authenticated endpoint URLs are supported. Embedded usernames, passwords, or tokens are decoded and sent as HTTP Basic authorization while the request URL itself remains credential-free. They are also removed from public client state, human output, JSON responses, health reports, resolved configuration, and aggregate errors. Credential-bearing remote endpoints must use HTTPS because Basic authorization encodes credentials but does not encrypt them; plaintext HTTP credentials are accepted only for loopback development.
+
+Redirects are limited to three hops and must remain on the original endpoint origin. Cross-origin and credential-bearing redirect targets are rejected before they are requested. Response bodies are streamed with a 4 MiB limit, result arrays over 5,000 entries are rejected, and individual metadata fields are length-bounded before they are rendered or cached.
 
 An endpoint must expose the API Bay-compatible paths `q.php` and `t.php`. A normal Pirate Bay HTML proxy is not enough; if a proxy hosts API Bay under a subpath, provide that subpath as shown above. This constraint is what lets the project avoid HTML scraping entirely.
 
@@ -261,6 +272,12 @@ npm test
 npm run build
 # or all three
 npm run check
+npm audit --audit-level=moderate
+npm audit signatures
 ```
 
-The test suite uses OpenTUI's memory renderer, so it verifies the real native layout and input path without modifying the current terminal.
+The test suite uses OpenTUI's memory renderer, so it verifies the real native layout and input path without modifying the current terminal. GitHub Actions also performs these checks on pull requests, pushes to `master`, and a weekly schedule; it rejects npm tarballs containing anything beyond `Readme.md`, `dist/node-pirate.js`, and `package.json`.
+
+## Release integrity
+
+npm releases are published by `.github/workflows/release.yml` from a GitHub Release whose `vX.Y.Z` tag matches `package.json` and points to a commit on `master`. The job re-runs the locked install, registry-signature and advisory audits, tests, build, and package allowlist before publishing through npm trusted publishing with provenance. The npm package's trusted publisher must allow `npm publish` for GitHub user `nearbycoder`, repository `node-pirate`, and workflow `release.yml`; no long-lived npm token is used by the workflow.
