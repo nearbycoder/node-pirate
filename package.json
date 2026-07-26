@@ -1,25 +1,41 @@
 {
   "name": "node-pirate",
-  "version": "0.1.5",
-  "description": "Pirate Bay Search and Download",
-  "bin": "node-pirate.js",
+  "version": "1.0.0",
+  "description": "A resilient OpenTUI client for discovering legal torrent metadata indexed by The Pirate Bay",
+  "type": "module",
+  "bin": {
+    "node-pirate": "dist/node-pirate.js"
+  },
+  "files": [
+    "dist",
+    "Readme.md"
+  ],
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "start": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --target=bun --packages=external --outfile=dist/node-pirate.js --banner='#!/usr/bin/env bun'",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test && bun run build",
+    "prepack": "bun run build"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "packageManager": "npm@10.9.7",
   "author": "nearbycoder",
-  "url": "https://github.com/nearbycoder/node-pirate",
+  "homepage": "https://github.com/nearbycoder/node-pirate",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nearbycoder/node-pirate"
+    "url": "git+https://github.com/nearbycoder/node-pirate.git"
   },
-  "license": "(ISC OR GPL-3.0)",
+  "license": "(ISC OR GPL-3.0-only)",
   "dependencies": {
-    "cheerio": "latest",
-    "cli-table": "*",
-    "colors": "*",
-    "commander": "*",
-    "homedir": "*",
-    "inquirer": "^0.11.1",
-    "lodash": "*",
-    "progress": "*",
-    "request": "*",
-    "torrent-stream": "^1.0.0"
+    "@opentui/core": "^0.4.3",
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^7.0.2"
   }
 }
