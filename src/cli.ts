@@ -6,6 +6,7 @@ import { categoryGroups, categoryLabel, formatBytes, formatDate, parseCategory, 
 import { formatResultHeader, formatResultLine } from "./format.ts"
 import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
 import { createMagnetUri } from "./magnet.ts"
+import { sanitizeMultiline, sanitizeSingleLine } from "./text.ts"
 import { runTui, type TuiView } from "./tui.ts"
 import { VERSION } from "./version.ts"
 
@@ -215,23 +216,23 @@ program
       return
     }
     const torrent = response.torrent
-    console.log(`${torrent.name}\n`)
-    console.log(`ID:       ${torrent.id}`)
+    console.log(`${sanitizeSingleLine(torrent.name)}\n`)
+    console.log(`ID:       ${sanitizeSingleLine(torrent.id)}`)
     console.log(`Size:     ${formatBytes(torrent.size)}`)
     console.log(`Files:    ${torrent.fileCount}`)
     console.log(`Seeders:  ${torrent.seeders}`)
     console.log(`Leechers: ${torrent.leechers}`)
     console.log(`Added:    ${formatDate(torrent.addedAt)}`)
     console.log(`Category: ${categoryLabel(torrent.category)} (${torrent.category})`)
-    console.log(`Uploader: ${torrent.username || "anonymous"}`)
-    console.log(`Status:   ${torrent.status || "unknown"}`)
-    console.log(`Hash:     ${torrent.infoHash}`)
+    console.log(`Uploader: ${sanitizeSingleLine(torrent.username) || "anonymous"}`)
+    console.log(`Status:   ${sanitizeSingleLine(torrent.status) || "unknown"}`)
+    console.log(`Hash:     ${sanitizeSingleLine(torrent.infoHash)}`)
     const imdbUrl = createImdbUrl(torrent)
     const imdbSearchUrl = createImdbSearchUrl(torrent)
     if (imdbUrl !== imdbSearchUrl) console.log(`IMDb:     ${imdbUrl}`)
     console.log(`IMDb find: ${imdbSearchUrl}`)
     if (options.magnet) console.log(`Magnet:   ${createMagnetUri(torrent)}`)
-    if (torrent.description) console.log(`\n${torrent.description}`)
+    if (torrent.description) console.log(`\n${sanitizeMultiline(torrent.description)}`)
   })
 
 program
@@ -428,7 +429,7 @@ function printTorrentTable(torrents: readonly TorrentSummary[], sort: SortOrder,
   console.log(`${"ID".padStart(9)}  ${formatResultHeader(width, sort, reversed)}`)
   console.log(`${"─".repeat(9)}  ${"─".repeat(width)}`)
   for (const torrent of torrents) {
-    console.log(`${torrent.id.padStart(9)}  ${formatResultLine(torrent, width)}`)
+    console.log(`${sanitizeSingleLine(torrent.id).padStart(9)}  ${formatResultLine(torrent, width)}`)
     if (includeMagnet) console.log(`${"".padStart(11)}${createMagnetUri(torrent)}`)
   }
 }
@@ -478,7 +479,7 @@ try {
       }, null, 2))
     }
   } else {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = sanitizeSingleLine(error instanceof Error ? error.message : String(error))
     console.error(jsonOutputRequested ? JSON.stringify(serializeCliError(error, message), null, 2) : `node-pirate: ${message}`)
     process.exitCode = 1
   }

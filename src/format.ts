@@ -1,5 +1,5 @@
 import { categoryLabel, formatBytes, formatDate, sortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
-import { fitToWidth } from "./text.ts"
+import { fitToWidth, sanitizeSingleLine } from "./text.ts"
 
 interface ResultColumn {
   key: SortOrder
@@ -88,11 +88,16 @@ function joinColumns(columns: readonly ResultColumn[], values: Record<SortOrder,
 }
 
 export function formatDetails(torrent: TorrentSummary): string {
+  const id = sanitizeSingleLine(torrent.id)
+  const infoHash = sanitizeSingleLine(torrent.infoHash)
+  const name = sanitizeSingleLine(torrent.name)
+  const status = sanitizeSingleLine(torrent.status)
+  const username = sanitizeSingleLine(torrent.username)
   return [
-    torrent.name,
-    `ID ${torrent.id}  •  ${formatBytes(torrent.size)}  •  ${torrent.fileCount} file${torrent.fileCount === 1 ? "" : "s"}`,
+    name,
+    `ID ${id}  •  ${formatBytes(torrent.size)}  •  ${torrent.fileCount} file${torrent.fileCount === 1 ? "" : "s"}`,
     `Seeders ${torrent.seeders}  •  Leechers ${torrent.leechers}  •  Added ${formatDate(torrent.addedAt)}`,
-    `Uploader ${torrent.username || "anonymous"}  •  Status ${torrent.status || "unknown"}`,
-    `Hash ${torrent.infoHash}`,
+    `Uploader ${username || "anonymous"}  •  Status ${status || "unknown"}`,
+    `Hash ${infoHash}`,
   ].join("\n")
 }

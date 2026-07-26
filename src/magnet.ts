@@ -1,4 +1,5 @@
 import type { TorrentSummary } from "./domain.ts"
+import { sanitizeSingleLine } from "./text.ts"
 
 const DEFAULT_TRACKERS = [
   "udp://tracker.opentrackr.org:1337/announce",
@@ -14,10 +15,14 @@ export function createMagnetUri(
   const infoHash = torrent.infoHash.trim().toUpperCase()
   if (!/^[A-F0-9]{40}$/.test(infoHash)) throw new Error("A magnet link requires a 40-character hexadecimal info hash.")
 
+  const name = sanitizeSingleLine(torrent.name)
   const parameters = [
     `xt=urn:btih:${infoHash}`,
-    `dn=${encodeURIComponent(torrent.name)}`,
-    ...[...new Set(trackers)].map((tracker) => `tr=${encodeURIComponent(tracker)}`),
+    `dn=${encodeURIComponent(name)}`,
+    ...[...new Set(trackers)]
+      .map((tracker) => sanitizeSingleLine(tracker))
+      .filter(Boolean)
+      .map((tracker) => `tr=${encodeURIComponent(tracker)}`),
   ]
   return `magnet:?${parameters.join("&")}`
 }
