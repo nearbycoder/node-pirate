@@ -31,7 +31,7 @@
   },
   "license": "(ISC OR GPL-3.0-only)",
   "dependencies": {
-    "@opentui/core": "0.4.5",
+    "@opentui/core": "0.5.1",
     "commander": "15.0.0"
   },
   "devDependencies": {
