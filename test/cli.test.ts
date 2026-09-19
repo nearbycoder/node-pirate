@@ -526,3 +526,14 @@ test("count output counts matches before pagination and prints zero", async () =
   const conflict = await runCli([...args, "--json"], env)
   expect(conflict.code).toBe(1)
 })
+
+test("fail-empty distinguishes no matches from an empty page", async () => {
+  const args = ["search", "movie", "--endpoint", "https://healthy.test/", "--fail-empty", "--json"]
+  const env = { NODE_PIRATE_TEST_FETCH: "fixture" }
+  const empty = await runCli([...args, "--exclude", "movie"], env)
+  expect(empty.code).toBe(2)
+  expect(JSON.parse(empty.stdout).resultCount).toBe(0)
+  const page = await runCli([...args, "--offset", "20"], env)
+  expect(page.code).toBe(0)
+  expect(JSON.parse(page.stdout).availableResults).toBe(2)
+})
