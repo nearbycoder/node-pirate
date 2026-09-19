@@ -67,7 +67,7 @@ source <(node-pirate completion zsh)
 node-pirate completion fish | source
 ```
 
-With no argument, `node-pirate completion` infers Bash, Zsh, or Fish from `SHELL`. Redirect the generated script into your shell's normal completion directory for persistent setup. Completion is local and makes no API request.
+With no argument, `node-pirate completion` infers Bash, Zsh, or Fish from `SHELL`. Redirect the generated script into your shell's normal completion directory for persistent setup. Completion is local and makes no API request. It supports both `--sort name` and `--sort=name`, comma-separated category/column lists, and stops suggesting options after `--`.
 
 ## Interactive interface
 
