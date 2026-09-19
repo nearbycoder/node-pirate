@@ -146,6 +146,7 @@ node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
 
 | Option | Behavior |
 | --- | --- |
+| `--include-any <text>` | Require at least one of these title terms; repeat for alternatives |
 | `--include <text>` | Require a literal substring in the title; repeat to require every term |
 | `--exclude <text>` | Hide any title containing a literal substring; repeat for more exclusions |
 | `--min-seeders <number>` | Require at least this many seeders; `0` permits unseeded results |

@@ -1,6 +1,7 @@
 import type { SearchResponse, TorrentSummary } from "./domain.ts"
 
 export interface ResultFilters {
+  includeAny?: string[]
   include?: string[]
   exclude?: string[]
   minSeeders?: number
@@ -13,6 +14,7 @@ export interface ResultFilters {
 }
 
 export interface FilterOptions {
+  includeAny?: string[]
   include?: string[]
   exclude?: string[]
   minSeeders?: string
@@ -44,7 +46,7 @@ function parseDate(value: string, label: string): string {
 
 export function parseFilters(options: FilterOptions): ResultFilters {
   const filters: ResultFilters = {}
-  for (const key of ["include", "exclude"] as const) {
+  for (const key of ["include", "includeAny", "exclude"] as const) {
     if (options[key]) {
       const terms = options[key].map((term) => term.trim())
       if (terms.some((term) => !term)) throw new Error(`--${key} requires non-empty text.`)
@@ -75,6 +77,7 @@ export function parseFilters(options: FilterOptions): ResultFilters {
 function matches(torrent: TorrentSummary, filters: ResultFilters): boolean {
   const name = torrent.name.toLowerCase()
   return (filters.include ?? []).every((term) => name.includes(term.toLowerCase()))
+    && (!filters.includeAny?.length || filters.includeAny.some((term) => name.includes(term.toLowerCase())))
     && !(filters.exclude ?? []).some((term) => name.includes(term.toLowerCase()))
     && (filters.minSeeders === undefined || torrent.seeders >= filters.minSeeders)
     && (filters.minSize === undefined || torrent.size >= filters.minSize)

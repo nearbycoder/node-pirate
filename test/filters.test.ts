@@ -41,3 +41,10 @@ describe("result filters", () => {
     ]) expect(() => parseFilters(options)).toThrow()
   })
 })
+
+test("include-any alternatives combine with required terms and exclusions", () => {
+  const filters = parseFilters({ include: ["ubuntu"], includeAny: ["AMD64", "arm64"] })
+  expect(filterResponse(response, filters, 0).results.map((row) => row.id)).toEqual(["1"])
+  expect(filterResponse(response, { ...filters, exclude: ["stable"] }, 0).results).toEqual([])
+  expect(() => parseFilters({ includeAny: [" "] })).toThrow()
+})
