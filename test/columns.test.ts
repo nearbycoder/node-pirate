@@ -13,3 +13,10 @@ test("custom tables respect requested order, sanitize text, and fit narrow termi
   expect(() => parseColumns("name,name")).toThrow()
   expect(() => parseColumns("")).toThrow()
 })
+
+test("wide tables retain long Unicode titles even on narrow terminals", () => {
+  const name = "漢字".repeat(100)
+  const row = { id: "1", name, seeders: 1, leechers: 0, size: 1, fileCount: 1, category: 301, username: "test", status: "vip", infoHash: "A".repeat(40), addedAt: new Date() } satisfies TorrentSummary
+  expect(customTable([row], ["name"], 20, true)).toContain(name)
+  expect(customTable([row], ["name"], 20)).not.toContain(name)
+})
