@@ -548,3 +548,10 @@ test("strict results retain JSON diagnostics and take precedence over fail-empty
   expect(JSON.parse(strict.stdout).partial).toBe(true)
   expect(JSON.parse(strict.stdout).failedSources).toBe(1)
 })
+
+test("CLI exports delimited rows without table prose", async () => {
+  const result = await runCli(["search", "movie", "--format", "csv", "--limit", "1", "--endpoint", "https://healthy.test/"], { NODE_PIRATE_TEST_FETCH: "fixture" })
+  expect(result.code).toBe(0)
+  expect(result.stdout).toStartWith("id,name,seeders,")
+  expect(result.stdout.trim().split("\n")).toHaveLength(2)
+})

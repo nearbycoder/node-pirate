@@ -169,6 +169,8 @@ Filters run locally on the fetched feeds, before `--limit`. Use `--offset 20 --l
 
 `--fail-empty` returns exit status **2** when no results match, while preserving the selected output format. An offset beyond existing matches is not considered a failed search. Ordinary request or validation errors use status **1**.
 
+Use `--format csv` or `--format tsv` to export a header row and structured columns with byte sizes and ISO dates. Add `--magnet` for a magnet column. Text cells that could execute spreadsheet formulas are prefixed with an apostrophe. These formats cannot be combined with JSON, counts, or plain ID/magnet output.
+
 `--count` prints the total number of matches before offset and limit, including `0` for an empty result. Use it for quick counts in scripts; it cannot be combined with other output modes.
 
 `--ids` and `--magnets` produce only one value per line, with empty output and a successful exit when nothing matches. They cannot be combined with each other, `--json`, or `--magnet` (which adds links to the regular output). Partial-feed warnings still go to stderr.

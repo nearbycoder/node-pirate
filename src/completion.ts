@@ -16,7 +16,7 @@ const commands = [
 ] as const
 
 const globalOptions = ["--help", "--version", "--endpoint", "--config", "--timeout"] as const
-const filterOptions = ["--strict", "--fail-empty", "--count", "--offset", "--min-files", "--max-files", "--max-age", "--exclude-category", "--exclude-uploader", "--include-any", "--include", "--exclude", "--min-seeders", "--min-size", "--max-size", "--uploader", "--trusted", "--after", "--before", "--ids", "--magnets"] as const
+const filterOptions = ["--format", "--strict", "--fail-empty", "--count", "--offset", "--min-files", "--max-files", "--max-age", "--exclude-category", "--exclude-uploader", "--include-any", "--include", "--exclude", "--min-seeders", "--min-size", "--max-size", "--uploader", "--trusted", "--after", "--before", "--ids", "--magnets"] as const
 const optionsByCommand: Record<string, readonly string[]> = {
   tui: ["--help", "--view", "--category", "--sort", "--direction", "--reverse"],
   search: [...filterOptions, "--help", "--title", "--category", "--sort", "--direction", "--reverse", "--order", "--limit", "--json", "--magnet"],
@@ -35,6 +35,7 @@ const categoryCandidates = ["all", "audio", "movies", "tv", "video", "applicatio
 const sortCandidates = ["category", "seeders", "leechers", "date", "size", "name"] as const
 const periodCandidates = ["day", "24h", "week", "7d", "all"] as const
 const valueCandidates: Record<string, readonly string[]> = {
+  "--format": ["csv", "tsv"],
   "--category": categoryCandidates,
   "--exclude-category": categoryCandidates,
   "-c": categoryCandidates,

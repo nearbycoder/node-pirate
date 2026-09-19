@@ -3,6 +3,7 @@ import { ApiBayClient, EndpointPoolError, redactEndpoint } from "./api.ts"
 import { completionCandidates, completionScript, resolveCompletionShell } from "./completion.ts"
 import { loadConfig, type ResolvedConfig } from "./config.ts"
 import { categoryGroups, categoryLabel, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
+import { delimitedResults } from "./export.ts"
 import { filterResponse, parseFilters } from "./filters.ts"
 import { formatResultHeader, formatResultLine } from "./format.ts"
 import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
@@ -376,6 +377,7 @@ for (const name of ["search", "top"]) {
     .option("--max-age <duration>", "maximum upload age, e.g. 12h, 7d, or 2w")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
     .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
+    .addOption(new Option("--format <format>", "export csv or tsv with headers and byte sizes").choices(["csv", "tsv"]).conflicts(["json", "ids", "magnets", "count"]))
     .addOption(new Option("--count", "print the number of matches before offset and limit").conflicts(["json", "magnet", "ids", "magnets"]))
     .addOption(new Option("--ids", "print only one torrent ID per line").conflicts(["json", "magnet", "magnets"]))
     .addOption(new Option("--magnets", "print only one magnet URI per line").conflicts(["json", "magnet", "ids"]))
@@ -389,9 +391,13 @@ Filtering:
   node-pirate ${name} ${name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
 }
 
-function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean }): boolean {
-  if (!options.ids && !options.magnets && !options.count) return false
+function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean; format?: "csv" | "tsv"; magnet?: boolean }): boolean {
+  if (!options.ids && !options.magnets && !options.count && !options.format) return false
   printPartialWarning(response)
+  if (options.format) {
+    console.log(delimitedResults(response.results, options.format, options.magnet))
+    return true
+  }
   if (options.count) {
     console.log(response.availableResults ?? response.results.length)
     return true
