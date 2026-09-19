@@ -3,6 +3,7 @@ import { ApiBayClient, EndpointPoolError, redactEndpoint } from "./api.ts"
 import { completionCandidates, completionScript, resolveCompletionShell } from "./completion.ts"
 import { loadConfig, type ResolvedConfig } from "./config.ts"
 import { categoryGroups, categoryLabel, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
+import { customTable, parseColumns, type TableColumn } from "./columns.ts"
 import { delimitedResults } from "./export.ts"
 import { filterResponse, parseFilters } from "./filters.ts"
 import { formatResultHeader, formatResultLine } from "./format.ts"
@@ -117,6 +118,7 @@ Examples:
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
     const limit = nonNegativeInteger(options.limit, "limit")
+    const columns = options.columns ? parseColumns(options.columns) : undefined
     const offset = nonNegativeInteger(options.offset ?? "0", "offset")
     const filters = parseFilters(options)
     const response = filterResponse(await client.search({
@@ -149,7 +151,7 @@ Examples:
     if (printPlainResults(response, options)) return
     console.log(`Results · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
-    printTorrentTable(response.results, sort, options.magnet, reverse)
+    printTorrentTable(response.results, sort, options.magnet, reverse, columns)
     printFilterSummary(response)
     if (response.results.length === 0) console.log("No results returned. Try a broader query or relax your filters.")
   })
@@ -178,6 +180,7 @@ Examples:
       ? reverseForSortDirection(sort, options.direction as SortDirection)
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
+    const columns = options.columns ? parseColumns(options.columns) : undefined
     const offset = nonNegativeInteger(options.offset ?? "0", "offset")
     const filters = parseFilters(options)
     const response = filterResponse(await (await createClient()).top({
@@ -210,7 +213,7 @@ Examples:
     const periodLabel = period === "day" ? "24 hours" : period === "week" ? "7 days" : "full category ranking"
     console.log(`Top downloads · ${periodLabel} · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
-    printTorrentTable(response.results, sort, options.magnet, reverse)
+    printTorrentTable(response.results, sort, options.magnet, reverse, columns)
     printFilterSummary(response)
     if (response.results.length === 0) console.log("No top downloads returned. Try another category, period, or relax your filters.")
   })
@@ -359,6 +362,7 @@ program
 for (const name of ["search", "top"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
+    .addOption(new Option("--columns <names>", "table columns in order, e.g. id,name,seeders,size,uploader").conflicts(["json", "jsonl", "format", "ids", "magnets", "count", "magnet"]))
     .option("--strict", "exit with status 3 if any result feed is unavailable")
     .option("--fail-empty", "exit with status 2 when no results match (before pagination)")
     .option("--offset <number>", "skip this many matching results before --limit", "0")
@@ -504,8 +508,12 @@ function nonNegativeInteger(value: string, label: string): number {
   return number
 }
 
-function printTorrentTable(torrents: readonly TorrentSummary[], sort: SortOrder, includeMagnet: boolean, reversed = false): void {
+function printTorrentTable(torrents: readonly TorrentSummary[], sort: SortOrder, includeMagnet: boolean, reversed = false, columns?: TableColumn[]): void {
   if (torrents.length === 0) return
+  if (columns) {
+    console.log(customTable(torrents, columns, process.stdout.columns ?? 120))
+    return
+  }
   const width = Math.max(24, (process.stdout.columns ?? 120) - 12)
   console.log(`${"ID".padStart(9)}  ${formatResultHeader(width, sort, reversed)}`)
   console.log(`${"─".repeat(9)}  ${"─".repeat(width)}`)
