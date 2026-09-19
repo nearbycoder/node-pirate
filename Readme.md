@@ -148,6 +148,7 @@ node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
 
 | Option | Behavior |
 | --- | --- |
+| `--exclude-category <category>` | Hide category names or IDs separated by commas; parent categories hide all their children |
 | `--include-any <text>` | Require at least one of these title terms; repeat for alternatives |
 | `--include <text>` | Require a literal substring in the title; repeat to require every term |
 | `--exclude <text>` | Hide any title containing a literal substring; repeat for more exclusions |

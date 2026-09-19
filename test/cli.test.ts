@@ -124,7 +124,7 @@ describe("CLI validation and help", () => {
     expect(search.code).toBe(0)
     expect(search.stdout).toContain("[query...]")
     expect(search.stdout).toContain("quotes are optional")
-    expect(search.stdout).toMatch(/reads piped\s+stdin when omitted/u)
+    expect(search.stdout.replace(/\s+/gu, " ")).toContain("reads piped stdin when omitted")
     expect(search.stdout).toMatch(/0 returns all\s+available/u)
     expect(search.stdout).toContain("--direction <direction>")
     expect(search.stdout).toContain("printf 'ubuntu linux\\n' | node-pirate search --json")

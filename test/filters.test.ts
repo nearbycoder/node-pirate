@@ -54,3 +54,9 @@ test("uploader exclusions are exact, case insensitive, and repeatable", () => {
   expect(filterResponse(response, parseFilters({ excludeUploader: ["publish"] }), 0).results).toHaveLength(2)
   expect(() => parseFilters({ excludeUploader: [" "] })).toThrow()
 })
+
+test("category exclusions support parent groups and comma-separated IDs", () => {
+  expect(filterResponse(response, parseFilters({ excludeCategory: "applications" }), 0).results).toEqual([])
+  expect(filterResponse(response, parseFilters({ excludeCategory: "301,302" }), 0).results).toEqual([])
+  expect(filterResponse(response, parseFilters({ excludeCategory: "movies,tv" }), 0).results).toHaveLength(2)
+})
