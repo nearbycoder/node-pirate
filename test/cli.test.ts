@@ -584,3 +584,13 @@ test("details accepts a page URL while using the configured API", async () => {
   expect(result.code).toBe(0)
   expect(JSON.parse(result.stdout).torrent.id).toBe("42")
 })
+
+test("saved results can be filtered offline with no working API", async () => {
+  const saved = await runCli(["search", "movie", "--json", "--endpoint", "https://healthy.test/"], { NODE_PIRATE_TEST_FETCH: "fixture" })
+  const filtered = await runCli(["filter", "--exclude", "some", "--ids", "--endpoint", "https://unhealthy.test/"], { NODE_PIRATE_TEST_FETCH: "fixture" }, saved.stdout)
+  expect(filtered.code).toBe(0)
+  expect(filtered.stdout).toBe("43\n")
+  const invalid = await runCli(["filter", "--json"], {}, '{"results":[{"id":"bad"}]}')
+  expect(invalid.code).toBe(1)
+  expect(JSON.parse(invalid.stderr).error).toContain("row 1")
+})
