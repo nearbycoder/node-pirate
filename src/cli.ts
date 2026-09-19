@@ -74,6 +74,7 @@ Examples:
       ? reverseForSortDirection(sort, options.direction as SortDirection)
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
+    const filters = parseFilters(options)
     requireInteractiveTerminal()
     await runTui(await createClient(), {
       ...(query ? { initialQuery: query } : {}),
@@ -81,6 +82,7 @@ Examples:
       initialCategory: category,
       initialSort: sort,
       initialReverse: reverse,
+      filters,
     })
   })
 
@@ -407,15 +409,8 @@ program
     if (candidates.length) process.stdout.write(`${candidates.join("\n")}\n`)
   })
 
-// Keep search and ranking filters identical, including output-mode conflicts.
-for (const name of ["search", "top", "filter"]) {
-  const command = program.commands.find((command) => command.name() === name)!
+function addResultFilters(command: Command): void {
   command
-    .addOption(new Option("--wide", "show full table values without truncation").conflicts(["json", "jsonl", "format", "ids", "magnets", "count"]))
-    .addOption(new Option("--columns <names>", "table columns in order, e.g. id,name,seeders,size,uploader").conflicts(["json", "jsonl", "format", "ids", "magnets", "count", "magnet"]))
-    .option("--strict", "exit with status 3 if any result feed is unavailable")
-    .option("--fail-empty", "exit with status 2 when no results match (before pagination)")
-    .option("--offset <number>", "skip this many matching results before --limit", "0")
     .option("--exclude-category <category>", "hide category names or IDs, separated by commas")
     .option("--include-any <text>", "require any of these title terms; repeat for alternatives", collect)
     .option("--include <text>", "require title text (case-insensitive); repeat to require every term", collect)
@@ -431,6 +426,20 @@ for (const name of ["search", "top", "filter"]) {
     .option("--max-age <duration>", "maximum upload age, e.g. 12h, 7d, or 2w")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
     .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
+}
+
+addResultFilters(program.commands.find((command) => command.name() === "tui")!)
+
+// Keep search and ranking filters identical, including output-mode conflicts.
+for (const name of ["search", "top", "filter"]) {
+  const command = program.commands.find((command) => command.name() === name)!
+  addResultFilters(command)
+  command
+    .addOption(new Option("--wide", "show full table values without truncation").conflicts(["json", "jsonl", "format", "ids", "magnets", "count"]))
+    .addOption(new Option("--columns <names>", "table columns in order, e.g. id,name,seeders,size,uploader").conflicts(["json", "jsonl", "format", "ids", "magnets", "count", "magnet"]))
+    .option("--strict", "exit with status 3 if any result feed is unavailable")
+    .option("--fail-empty", "exit with status 2 when no results match (before pagination)")
+    .option("--offset <number>", "skip this many matching results before --limit", "0")
     .addOption(new Option("--jsonl", "emit one JSON result per line").conflicts(["json", "format", "ids", "magnets", "count"]))
     .addOption(new Option("--format <format>", "export csv or tsv with headers and byte sizes").choices(["csv", "tsv"]).conflicts(["json", "ids", "magnets", "count"]))
     .addOption(new Option("--count", "print the number of matches before offset and limit").conflicts(["json", "magnet", "ids", "magnets"]))

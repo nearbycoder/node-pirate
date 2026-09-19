@@ -607,3 +607,28 @@ test("closing details aborts its pending request", async () => {
   expect(app.modal.visible).toBeFalse()
   app.destroy()
 })
+
+test("TUI applies startup filters across search and top before display limits", async () => {
+  const setup = await createTestRenderer({ width: 140, height: 28 })
+  let searchLimit: number | undefined
+  let topLimit: number | undefined
+  const response = { endpoint: "https://api.example/", results: [torrent({ name: "Ubuntu beta" }), torrent({ id: "2", name: "Ubuntu stable", infoHash: "2".repeat(40) })] }
+  const source: TorrentDataSource = {
+    endpoints: [response.endpoint],
+    async search(options) { searchLimit = options.limit; return response },
+    async top(options) { topLimit = options.limit; return response },
+    async details() { return { endpoint: response.endpoint, torrent: details() } },
+    async health() { return [] },
+  }
+  const app = createTui(setup.renderer, source, { filters: { exclude: ["beta"] } })
+  try {
+    await setup.waitFor(() => app.results.options.length === 1)
+    expect(topLimit).toBeUndefined()
+    expect(app.results.options[0]?.value.name).toBe("Ubuntu stable")
+    await app.search("ubuntu")
+    expect(searchLimit).toBe(0)
+    expect(app.results.options).toHaveLength(1)
+    await setup.renderOnce()
+    expect(setup.captureCharFrame()).toContain("filters active: 1 hidden")
+  } finally { app.destroy() }
+})
