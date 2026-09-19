@@ -443,3 +443,65 @@ describe("CLI validation and help", () => {
     expect(candidates.stdout.trim()).toBe("movies")
   })
 })
+
+describe("CLI result filtering and pipe output", () => {
+  const environment = { NODE_PIRATE_TEST_FETCH: "fixture" }
+  const endpoint = ["--endpoint", "https://healthy.test/"]
+
+  test("exclusion happens before limit and JSON explains the counts", async () => {
+    const result = await runCli([...endpoint, "search", "movie", "--exclude", "SOME", "--limit", "1", "--json"], environment)
+    expect(result.code).toBe(0)
+    const payload = JSON.parse(result.stdout)
+    expect(payload.results.map((row: { id: string }) => row.id)).toEqual(["43"])
+    expect(payload.availableResults).toBe(1)
+    expect(payload.unfilteredResults).toBe(2)
+    expect(payload.filteredOut).toBe(1)
+    expect(payload.truncated).toBe(false)
+    expect(payload.request.filters).toEqual({ exclude: ["SOME"] })
+  })
+
+  test("combined filters emit only IDs or magnets without headings", async () => {
+    const args = [...endpoint, "search", "movie", "--include", "some", "--include", "more", "--exclude", "beta", "--min-seeders", "10", "--min-size", "1GiB", "--max-size", "2GB", "--trusted", "--uploader", "TESTER"]
+    const ids = await runCli([...args, "--ids"], environment)
+    expect(ids.code).toBe(0)
+    expect(ids.stdout).toBe("42\n")
+    expect(ids.stderr).toBe("")
+    const magnets = await runCli([...args, "--magnets"], environment)
+    expect(magnets.code).toBe(0)
+    expect(magnets.stdout.trim()).toStartWith("magnet:?xt=urn:btih:")
+    expect(magnets.stdout.trim().split("\n")).toHaveLength(1)
+    const empty = await runCli([...args, "--exclude", "movie", "--ids"], environment)
+    expect(empty.code).toBe(0)
+    expect(empty.stdout).toBe("")
+  })
+
+  test("top supports the same filters and plain output", async () => {
+    const result = await runCli([...endpoint, "top", "all", "--category", "207", "--exclude", "some", "--limit", "1", "--ids"], { ...environment, NODE_PIRATE_TEST_TOP: "fixture" })
+    expect(result.code).toBe(0)
+    expect(result.stdout).toBe("43\n")
+  })
+
+  test("invalid filters fail before any endpoint request", async () => {
+    for (const args of [["--max-size", "junk"], ["--after", "2024-02-30"], ["--min-seeders", "-1"]]) {
+      const result = await runCli(["--endpoint", "https://unhealthy.test/", "search", "ubuntu", ...args, "--json"], environment)
+      expect(result.code).toBe(1)
+      expect(JSON.parse(result.stderr).code).not.toBe("ENDPOINT_POOL_FAILURE")
+      expect(result.stdout).toBe("")
+    }
+  })
+
+  test("plain output rejects conflicting formats in either argument order", async () => {
+    for (const args of [["--ids", "--json"], ["--json", "--magnets"], ["--ids", "--magnet"], ["--magnets", "--ids"]]) {
+      const result = await runCli([...endpoint, "search", "movie", ...args], environment)
+      expect(result.code).toBe(1)
+      expect(result.stderr).toContain("cannot be used with option")
+    }
+  })
+
+  test("completion exposes filters and treats their arguments as values", async () => {
+    const flags = await runCli(["__complete", "--", "search", "--min-"])
+    expect(flags.stdout).toBe("--min-seeders\n--min-size\n")
+    const value = await runCli(["__complete", "--", "top", "--exclude", ""])
+    expect(value.stdout).toBe("")
+  })
+})

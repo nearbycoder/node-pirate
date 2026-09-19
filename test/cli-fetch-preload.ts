@@ -33,7 +33,7 @@ if (process.env.NODE_PIRATE_TEST_FETCH === "fixture") {
     }
     const body = url.pathname.endsWith("/t.php")
       ? primary
-      : url.pathname.endsWith("/q.php")
+      : url.pathname.endsWith("/q.php") || process.env.NODE_PIRATE_TEST_TOP === "fixture"
         ? [primary, {
             ...primary,
             id: "43",

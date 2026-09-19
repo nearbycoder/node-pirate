@@ -3,6 +3,7 @@ import { ApiBayClient, EndpointPoolError, redactEndpoint } from "./api.ts"
 import { completionCandidates, completionScript, resolveCompletionShell } from "./completion.ts"
 import { loadConfig, type ResolvedConfig } from "./config.ts"
 import { categoryGroups, categoryLabel, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
+import { filterResponse, parseFilters } from "./filters.ts"
 import { formatResultHeader, formatResultLine } from "./format.ts"
 import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
 import { createMagnetUri } from "./magnet.ts"
@@ -115,13 +116,14 @@ Examples:
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
     const limit = nonNegativeInteger(options.limit, "limit")
-    const response = await client.search({
+    const filters = parseFilters(options)
+    const response = filterResponse(await client.search({
       query,
       category,
       sort,
       reverse,
-      limit,
-    })
+      limit: 0,
+    }), filters, limit)
 
     if (options.json) {
       console.log(JSON.stringify({
@@ -133,15 +135,18 @@ Examples:
           direction: sortDirection(sort, reverse),
           reverse,
           limit,
+          ...(Object.keys(filters).length ? { filters } : {}),
         },
         ...serializeSearchResponse(response, options.magnet),
       }, null, 2))
       return
     }
+    if (printPlainResults(response, options)) return
     console.log(`Results · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
     printTorrentTable(response.results, sort, options.magnet, reverse)
-    if (response.results.length === 0) console.log("No results returned.")
+    printFilterSummary(response)
+    if (response.results.length === 0) console.log("No results returned. Try a broader query or relax your filters.")
   })
 
 program
@@ -168,13 +173,13 @@ Examples:
       ? reverseForSortDirection(sort, options.direction as SortDirection)
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
-    const response = await (await createClient()).top({
+    const filters = parseFilters(options)
+    const response = filterResponse(await (await createClient()).top({
       period,
       category,
       sort,
       reverse,
-      ...(limit ? { limit } : {}),
-    })
+    }), filters, limit)
     if (options.json) {
       console.log(JSON.stringify({
         request: {
@@ -185,17 +190,20 @@ Examples:
           direction: sortDirection(sort, reverse),
           reverse,
           limit,
+          ...(Object.keys(filters).length ? { filters } : {}),
         },
         ...serializeSearchResponse(response, options.magnet),
         period,
       }, null, 2))
       return
     }
+    if (printPlainResults(response, options)) return
     const periodLabel = period === "day" ? "24 hours" : period === "week" ? "7 days" : "full category ranking"
     console.log(`Top downloads · ${periodLabel} · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
     printTorrentTable(response.results, sort, options.magnet, reverse)
-    if (response.results.length === 0) console.log("No top downloads returned for this category and period.")
+    printFilterSummary(response)
+    if (response.results.length === 0) console.log("No top downloads returned. Try another category, period, or relax your filters.")
   })
 
 program
@@ -338,6 +346,46 @@ program
     if (candidates.length) process.stdout.write(`${candidates.join("\n")}\n`)
   })
 
+// Keep search and ranking filters identical, including output-mode conflicts.
+for (const name of ["search", "top"]) {
+  const command = program.commands.find((command) => command.name() === name)!
+  command
+    .option("--include <text>", "require title text (case-insensitive); repeat to require every term", collect)
+    .option("--exclude <text>", "hide titles containing text (case-insensitive); repeat for more terms", collect)
+    .option("--min-seeders <number>", "require at least this many seeders")
+    .option("--min-size <size>", "minimum size, e.g. 500MB or 1GiB")
+    .option("--max-size <size>", "maximum size, e.g. 2GB or 2GiB")
+    .option("--uploader <name>", "exact uploader name (case-insensitive)")
+    .option("--trusted", "only trusted or VIP uploaders (API-reported status)")
+    .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
+    .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
+    .addOption(new Option("--ids", "print only one torrent ID per line").conflicts(["json", "magnet", "magnets"]))
+    .addOption(new Option("--magnets", "print only one magnet URI per line").conflicts(["json", "magnet", "ids"]))
+    .addHelpText("after", `
+Filtering:
+  Filters combine with AND and run before --limit on the fetched results.
+  --include requires every term; --exclude removes any matching term.
+  Sizes: MB/GB use base 1000; MiB/GiB use base 1024. Date bounds include the day.
+
+  node-pirate ${name} ${name === "search" ? "ubuntu" : "week"} --exclude beta --min-seeders 5 --max-size 4GiB
+  node-pirate ${name} ${name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
+}
+
+function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean }): boolean {
+  if (!options.ids && !options.magnets) return false
+  printPartialWarning(response)
+  for (const torrent of response.results) console.log(options.ids ? torrent.id : createMagnetUri(torrent))
+  return true
+}
+
+function printFilterSummary(response: SearchResponse): void {
+  if (response.unfilteredResults !== undefined) {
+    const removed = response.unfilteredResults - (response.availableResults ?? response.results.length)
+    console.log(`\n${removed} filtered out of ${response.unfilteredResults} fetched results.`)
+  }
+  if (response.results.length < (response.availableResults ?? 0)) console.log("Use --limit 0 to show all matching results.")
+}
+
 // The root command accepts a free argument so it can provide a direct unknown-command
 // message. Every real subcommand still rejects arguments it does not declare.
 for (const command of program.commands) command.allowExcessArguments(false)
@@ -448,6 +496,7 @@ function serializeSearchResponse(response: SearchResponse, includeMagnet: boolea
     endpoint: response.endpoint,
     resultCount: response.results.length,
     availableResults,
+    ...(response.unfilteredResults !== undefined ? { unfilteredResults: response.unfilteredResults, filteredOut: response.unfilteredResults - availableResults } : {}),
     truncated: response.results.length < availableResults,
     ...(response.partial ? { partial: true, failedSources: response.failedSources ?? 1 } : {}),
     results: response.results.map((torrent) => serializeTorrent(torrent, includeMagnet)),
