@@ -151,6 +151,7 @@ node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
 | `--exclude <text>` | Hide any title containing a literal substring; repeat for more exclusions |
 | `--min-seeders <number>` | Require at least this many seeders; `0` permits unseeded results |
 | `--min-size <size>`, `--max-size <size>` | Inclusive byte-size bounds; accept bytes, KB/MB/GB/TB, or KiB/MiB/GiB/TiB |
+| `--exclude-uploader <name>` | Hide an exact uploader name (case-insensitive); repeat for more names |
 | `--uploader <name>` | Match an exact uploader name |
 | `--trusted` | Keep API-reported `trusted` and `vip` statuses |
 | `--after <YYYY-MM-DD>`, `--before <YYYY-MM-DD>` | Inclusive upload-date bounds in UTC |

@@ -7,6 +7,7 @@ export interface ResultFilters {
   minSeeders?: number
   minSize?: number
   maxSize?: number
+  excludeUploader?: string[]
   uploader?: string
   trusted?: boolean
   after?: string
@@ -20,6 +21,7 @@ export interface FilterOptions {
   minSeeders?: string
   minSize?: string
   maxSize?: string
+  excludeUploader?: string[]
   uploader?: string
   trusted?: boolean
   after?: string
@@ -46,7 +48,7 @@ function parseDate(value: string, label: string): string {
 
 export function parseFilters(options: FilterOptions): ResultFilters {
   const filters: ResultFilters = {}
-  for (const key of ["include", "includeAny", "exclude"] as const) {
+  for (const key of ["include", "includeAny", "exclude", "excludeUploader"] as const) {
     if (options[key]) {
       const terms = options[key].map((term) => term.trim())
       if (terms.some((term) => !term)) throw new Error(`--${key} requires non-empty text.`)
@@ -83,6 +85,7 @@ function matches(torrent: TorrentSummary, filters: ResultFilters): boolean {
     && (filters.minSize === undefined || torrent.size >= filters.minSize)
     && (filters.maxSize === undefined || torrent.size <= filters.maxSize)
     && (filters.uploader === undefined || torrent.username.toLowerCase() === filters.uploader.toLowerCase())
+    && !(filters.excludeUploader ?? []).some((name) => torrent.username.toLowerCase() === name.toLowerCase())
     && (!filters.trusted || ["trusted", "vip"].includes(torrent.status.toLowerCase()))
     && (filters.after === undefined || torrent.addedAt.getTime() >= Date.parse(`${filters.after}T00:00:00Z`))
     && (filters.before === undefined || torrent.addedAt.getTime() < Date.parse(`${filters.before}T00:00:00Z`) + 86_400_000)
