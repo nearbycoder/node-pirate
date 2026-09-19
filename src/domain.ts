@@ -66,6 +66,8 @@ export interface SearchResponse {
   results: TorrentSummary[]
   /** Results available from the fetched API feeds before applying the caller's limit. */
   availableResults?: number
+  /** Number fetched before CLI result filters, when filters are active. */
+  unfilteredResults?: number
   partial?: boolean
   failedSources?: number
 }

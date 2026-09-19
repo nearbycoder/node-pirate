@@ -125,6 +125,41 @@ If OpenTUI cannot emit OSC 52, the magnet action shows the complete link in the 
 
 Magnet output uses the canonical Deluge-compatible prefix `magnet:?xt=urn:btih:...` without percent-encoding the `urn:btih:` portion. The display name and tracker values remain safely encoded.
 
+## Filtering results
+
+Both `search` and `top` support the same filters:
+
+```sh
+# Exclude unwanted releases and require active seeders
+node-pirate search ubuntu --exclude beta --exclude arm64 --min-seeders 5
+
+# Require every included phrase and keep sizes within a range
+node-pirate search debian --include amd64 --include netinst --min-size 100MB --max-size 2GiB
+
+# Narrow rankings by uploader status and upload date
+node-pirate top all --trusted --after 2026-01-01 --before 2026-09-19
+
+# Export a clean list, one value per line
+node-pirate search ubuntu --uploader publisher --limit 5 --ids
+node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
+```
+
+| Option | Behavior |
+| --- | --- |
+| `--include <text>` | Require a literal substring in the title; repeat to require every term |
+| `--exclude <text>` | Hide any title containing a literal substring; repeat for more exclusions |
+| `--min-seeders <number>` | Require at least this many seeders; `0` permits unseeded results |
+| `--min-size <size>`, `--max-size <size>` | Inclusive byte-size bounds; accept bytes, KB/MB/GB/TB, or KiB/MiB/GiB/TiB |
+| `--uploader <name>` | Match an exact uploader name |
+| `--trusted` | Keep API-reported `trusted` and `vip` statuses |
+| `--after <YYYY-MM-DD>`, `--before <YYYY-MM-DD>` | Inclusive upload-date bounds in UTC |
+
+Text and uploader matching ignore case. Text is literal, so punctuation is not interpreted as a regular expression. All filters combine with AND. MB/GB use powers of 1000; MiB/GiB use powers of 1024. Status filtering reflects upstream metadata, not a guarantee about a file.
+
+Filters run locally on the fetched feeds, before `--limit`. Use `--limit 0` for all matches available in those feeds. Human output reports how many entries were filtered out and suggests widening filters when nothing matches. JSON includes normalized `request.filters`, `unfilteredResults`, and `filteredOut` when filters are active; `availableResults` counts matches before the limit.
+
+`--ids` and `--magnets` produce only one value per line, with empty output and a successful exit when nothing matches. They cannot be combined with each other, `--json`, or `--magnet` (which adds links to the regular output). Partial-feed warnings still go to stderr.
+
 ## Command mode
 
 ```sh
@@ -193,7 +228,7 @@ Multiword positional queries may be quoted or entered as separate arguments; `no
 
 Commands using `--json` also return validation and request failures as JSON on standard error with a nonzero exit status, so automation never needs to parse a human-formatted `node-pirate:` message. If every proxy fails, the payload includes `code: "ENDPOINT_POOL_FAILURE"`, the failed operation, and an ordered `failures` entry for every attempted endpoint.
 
-Successful search and top JSON includes a normalized `request` object, `resultCount`, `availableResults`, and `truncated`. `availableResults` is the number of unique entries supplied by the successfully fetched selected API feeds before `--limit` is applied; it is not a claim about every torrent on the index. Human output uses the same information, for example `20 of 73 results shown`, so a limited table is never mistaken for a complete response.
+Successful search and top JSON includes a normalized `request` object, `resultCount`, `availableResults`, and `truncated`. `availableResults` is the number of unique entries supplied by the successfully fetched selected API feeds after any filters and before `--limit` is applied; it is not a claim about every torrent on the index. Human output uses the same information, for example `20 of 73 results shown`, so a limited table is never mistaken for a complete response.
 
 ## Multiple API and proxy endpoints
 
