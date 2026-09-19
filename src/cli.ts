@@ -355,6 +355,8 @@ for (const name of ["search", "top"]) {
     .option("--include <text>", "require title text (case-insensitive); repeat to require every term", collect)
     .option("--exclude <text>", "hide titles containing text (case-insensitive); repeat for more terms", collect)
     .option("--min-seeders <number>", "require at least this many seeders")
+    .option("--min-files <number>", "minimum number of files")
+    .option("--max-files <number>", "maximum number of files; use 1 for single-file results")
     .option("--min-size <size>", "minimum size, e.g. 500MB or 1GiB")
     .option("--max-size <size>", "maximum size, e.g. 2GB or 2GiB")
     .option("--exclude-uploader <name>", "hide an exact uploader name; repeat for more names", collect)
