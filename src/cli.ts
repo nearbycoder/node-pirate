@@ -116,6 +116,7 @@ Examples:
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
     const limit = nonNegativeInteger(options.limit, "limit")
+    const offset = nonNegativeInteger(options.offset ?? "0", "offset")
     const filters = parseFilters(options)
     const response = filterResponse(await client.search({
       query,
@@ -123,7 +124,7 @@ Examples:
       sort,
       reverse,
       limit: 0,
-    }), filters, limit)
+    }), filters, limit, offset)
 
     if (options.json) {
       console.log(JSON.stringify({
@@ -135,6 +136,7 @@ Examples:
           direction: sortDirection(sort, reverse),
           reverse,
           limit,
+          ...(offset ? { offset } : {}),
           ...(Object.keys(filters).length ? { filters } : {}),
         },
         ...serializeSearchResponse(response, options.magnet),
@@ -173,13 +175,14 @@ Examples:
       ? reverseForSortDirection(sort, options.direction as SortDirection)
       : Boolean(options.reverse)
     const category = parseCategory(options.category)
+    const offset = nonNegativeInteger(options.offset ?? "0", "offset")
     const filters = parseFilters(options)
     const response = filterResponse(await (await createClient()).top({
       period,
       category,
       sort,
       reverse,
-    }), filters, limit)
+    }), filters, limit, offset)
     if (options.json) {
       console.log(JSON.stringify({
         request: {
@@ -190,6 +193,7 @@ Examples:
           direction: sortDirection(sort, reverse),
           reverse,
           limit,
+          ...(offset ? { offset } : {}),
           ...(Object.keys(filters).length ? { filters } : {}),
         },
         ...serializeSearchResponse(response, options.magnet),
@@ -350,6 +354,7 @@ program
 for (const name of ["search", "top"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
+    .option("--offset <number>", "skip this many matching results before --limit", "0")
     .option("--exclude-category <category>", "hide category names or IDs, separated by commas")
     .option("--include-any <text>", "require any of these title terms; repeat for alternatives", collect)
     .option("--include <text>", "require title text (case-insensitive); repeat to require every term", collect)
@@ -389,7 +394,7 @@ function printFilterSummary(response: SearchResponse): void {
     const removed = response.unfilteredResults - (response.availableResults ?? response.results.length)
     console.log(`\n${removed} filtered out of ${response.unfilteredResults} fetched results.`)
   }
-  if (response.results.length < (response.availableResults ?? 0)) console.log("Use --limit 0 to show all matching results.")
+  if (response.results.length < (response.availableResults ?? 0)) console.log("Use --limit 0 --offset 0 to show all matching results.")
 }
 
 // The root command accepts a free argument so it can provide a direct unknown-command
@@ -502,6 +507,7 @@ function serializeSearchResponse(response: SearchResponse, includeMagnet: boolea
     endpoint: response.endpoint,
     resultCount: response.results.length,
     availableResults,
+    ...(response.offset ? { offset: response.offset } : {}),
     ...(response.unfilteredResults !== undefined ? { unfilteredResults: response.unfilteredResults, filteredOut: response.unfilteredResults - availableResults } : {}),
     truncated: response.results.length < availableResults,
     ...(response.partial ? { partial: true, failedSources: response.failedSources ?? 1 } : {}),
@@ -512,6 +518,7 @@ function serializeSearchResponse(response: SearchResponse, includeMagnet: boolea
 function resultCountLabel(response: SearchResponse): string {
   const shown = response.results.length
   const available = response.availableResults ?? shown
+  if (response.offset && shown) return `results ${response.offset + 1}–${response.offset + shown} of ${available}`
   if (shown < available) return `${shown} of ${available} results shown`
   return `${shown} result${shown === 1 ? "" : "s"}`
 }
