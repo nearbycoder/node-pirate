@@ -387,7 +387,8 @@ program.commands.find((command) => command.name() === "config")!
   .command("init")
   .description("create a starter config without overwriting an existing file")
   .option("--json", "emit the created config path as JSON")
-  .action(async (options) => {
+  .action(async (_options, command: Command) => {
+    const options = command.optsWithGlobals()
     const configPath = program.opts<GlobalOptions>().config
     const path = await initializeConfig(configPath ? { configPath } : {})
     console.log(options.json ? JSON.stringify({ created: path }, null, 2) : `Created ${sanitizeSingleLine(path)}. Edit apiEndpoints and requestTimeoutMs to customize it.`)

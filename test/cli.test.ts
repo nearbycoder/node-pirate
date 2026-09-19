@@ -594,3 +594,20 @@ test("saved results can be filtered offline with no working API", async () => {
   expect(invalid.code).toBe(1)
   expect(JSON.parse(invalid.stderr).error).toContain("row 1")
 })
+
+test("config init honors inherited JSON output and refuses overwrite", async () => {
+  const { mkdtemp, rm } = await import("node:fs/promises")
+  const { tmpdir } = await import("node:os")
+  const { join } = await import("node:path")
+  const directory = await mkdtemp(join(tmpdir(), "node-pirate-cli-init-"))
+  try {
+    const path = join(directory, "config.json")
+    const args = ["config", "init", "--config", path, "--json"]
+    const created = await runCli(args)
+    expect(created.code).toBe(0)
+    expect(JSON.parse(created.stdout)).toEqual({ created: path })
+    const existing = await runCli(args)
+    expect(existing.code).toBe(1)
+    expect(JSON.parse(existing.stderr).error).toContain("not overwritten")
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
