@@ -1,7 +1,7 @@
 import { Command, CommanderError, Option } from "commander"
 import { ApiBayClient, EndpointPoolError, redactEndpoint } from "./api.ts"
 import { completionCandidates, completionScript, resolveCompletionShell } from "./completion.ts"
-import { loadConfig, type ResolvedConfig } from "./config.ts"
+import { initializeConfig, loadConfig, type ResolvedConfig } from "./config.ts"
 import { categoryGroups, categoryLabel, matchesCategory, sortTorrents, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
 import { customTable, parseColumns, type TableColumn } from "./columns.ts"
 import { delimitedResults } from "./export.ts"
@@ -381,6 +381,17 @@ program
     console.log(`Timeout:     ${config.requestTimeoutMs} ms (${config.timeoutSource})`)
     console.log(`Endpoints:   ${config.endpointSource}`)
     config.endpoints.forEach((endpoint, index) => console.log(`  ${index + 1}. ${redactEndpoint(endpoint)}`))
+  })
+
+program.commands.find((command) => command.name() === "config")!
+  .command("init")
+  .description("create a starter config without overwriting an existing file")
+  .option("--json", "emit the created config path as JSON")
+  .action(async (_options, command: Command) => {
+    const options = command.optsWithGlobals()
+    const configPath = program.opts<GlobalOptions>().config
+    const path = await initializeConfig(configPath ? { configPath } : {})
+    console.log(options.json ? JSON.stringify({ created: path }, null, 2) : `Created ${sanitizeSingleLine(path)}. Edit apiEndpoints and requestTimeoutMs to customize it.`)
   })
 
 program

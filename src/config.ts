@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises"
+import { readFile, mkdir, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { DEFAULT_ENDPOINTS, normalizeEndpoint } from "./api.ts"
 
 interface NodePirateConfig {
@@ -97,4 +97,17 @@ function isPositiveInteger(value: string): boolean {
 
 function splitEndpoints(value: string | undefined): string[] {
   return value?.split(",").map((endpoint) => endpoint.trim()).filter(Boolean) ?? []
+}
+
+export async function initializeConfig(options: { configPath?: string; env?: Record<string, string | undefined> } = {}): Promise<string> {
+  const env = options.env ?? process.env
+  const path = options.configPath ?? env.NODE_PIRATE_CONFIG ?? defaultConfigPath(env)
+  await mkdir(dirname(path), { recursive: true, mode: 0o700 })
+  try {
+    await writeFile(path, `${JSON.stringify({ apiEndpoints: [...DEFAULT_ENDPOINTS], requestTimeoutMs: 8000 }, null, 2)}\n`, { flag: "wx", mode: 0o600 })
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new Error(`Config already exists at ${path}; it was not overwritten.`)
+    throw error
+  }
+  return path
 }

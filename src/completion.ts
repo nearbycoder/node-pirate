@@ -76,6 +76,7 @@ export function completionCandidates(words: readonly string[]): string[] {
   if (current.startsWith("-")) return filterCandidates(commandOptions, current)
 
   const operands = commandOperands(completed.slice(context.index + 1))
+  if (context.command === "config" && operands.length === 0) return filterCandidates(["init", ...commandOptions], current)
   if (context.command === "top" && operands.length === 0) {
     return filterCandidates([...periodCandidates, ...(current ? [] : commandOptions)], current)
   }

@@ -50,6 +50,8 @@ For development:
 npm run dev
 ```
 
+Create a starter configuration with `node-pirate config init`. Use `--config /path/to/config.json` to select its location; otherwise the normal environment/XDG config path is used. Initialization writes default endpoints and timeout, creates missing directories, and never overwrites an existing file. It does not copy environment credentials into the file.
+
 ## Shell completion
 
 Load completion for the current shell session:
