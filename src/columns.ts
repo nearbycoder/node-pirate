@@ -13,7 +13,7 @@ export function parseColumns(value: string): TableColumn[] {
   return columns as TableColumn[]
 }
 
-export function customTable(torrents: readonly TorrentSummary[], columns: readonly TableColumn[], width: number): string {
+export function customTable(torrents: readonly TorrentSummary[], columns: readonly TableColumn[], width: number, wide = false): string {
   const rows = torrents.map((torrent) => columns.map((column) => {
     const values: Record<TableColumn, string | number> = {
       id: torrent.id, name: torrent.name, seeders: torrent.seeders, leechers: torrent.leechers,
@@ -22,10 +22,10 @@ export function customTable(torrents: readonly TorrentSummary[], columns: readon
     }
     return sanitizeSingleLine(String(values[column]))
   }))
-  const widths = columns.map((column, index) => Math.min(column === "name" ? 60 : 40,
+  const widths = columns.map((column, index) => Math.min(wide ? Infinity : column === "name" ? 60 : 40,
     Math.max(column.length, ...rows.map((row) => displayWidth(row[index]!)))))
   const budget = Math.max(columns.length, width - (columns.length - 1) * 2)
-  while (widths.reduce((total, value) => total + value, 0) > budget) {
+  while (!wide && widths.reduce((total, value) => total + value, 0) > budget) {
     const largest = widths.indexOf(Math.max(...widths))
     widths[largest] = widths[largest]! - 1
   }

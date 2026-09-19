@@ -151,7 +151,7 @@ Examples:
     if (printPlainResults(response, options)) return
     console.log(`Results · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
-    printTorrentTable(response.results, sort, options.magnet, reverse, columns)
+    printTorrentTable(response.results, sort, options.magnet, reverse, columns, options.wide)
     printFilterSummary(response)
     if (response.results.length === 0) console.log("No results returned. Try a broader query or relax your filters.")
   })
@@ -213,7 +213,7 @@ Examples:
     const periodLabel = period === "day" ? "24 hours" : period === "week" ? "7 days" : "full category ranking"
     console.log(`Top downloads · ${periodLabel} · ${resultCountLabel(response)} · via ${response.endpoint}\n`)
     printPartialWarning(response)
-    printTorrentTable(response.results, sort, options.magnet, reverse, columns)
+    printTorrentTable(response.results, sort, options.magnet, reverse, columns, options.wide)
     printFilterSummary(response)
     if (response.results.length === 0) console.log("No top downloads returned. Try another category, period, or relax your filters.")
   })
@@ -362,6 +362,7 @@ program
 for (const name of ["search", "top"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
+    .addOption(new Option("--wide", "show full table values without truncation").conflicts(["json", "jsonl", "format", "ids", "magnets", "count"]))
     .addOption(new Option("--columns <names>", "table columns in order, e.g. id,name,seeders,size,uploader").conflicts(["json", "jsonl", "format", "ids", "magnets", "count", "magnet"]))
     .option("--strict", "exit with status 3 if any result feed is unavailable")
     .option("--fail-empty", "exit with status 2 when no results match (before pagination)")
@@ -508,10 +509,11 @@ function nonNegativeInteger(value: string, label: string): number {
   return number
 }
 
-function printTorrentTable(torrents: readonly TorrentSummary[], sort: SortOrder, includeMagnet: boolean, reversed = false, columns?: TableColumn[]): void {
+function printTorrentTable(torrents: readonly TorrentSummary[], sort: SortOrder, includeMagnet: boolean, reversed = false, columns?: TableColumn[], wide = false): void {
   if (torrents.length === 0) return
-  if (columns) {
-    console.log(customTable(torrents, columns, process.stdout.columns ?? 120))
+  if (columns || wide) {
+    console.log(customTable(torrents, columns ?? ["id", "category", "name", "seeders", "leechers", "size", "date"], process.stdout.columns ?? 120, wide))
+    if (includeMagnet) for (const torrent of torrents) console.log(createMagnetUri(torrent))
     return
   }
   const width = Math.max(24, (process.stdout.columns ?? 120) - 12)

@@ -169,6 +169,8 @@ Filters run locally on the fetched feeds, before `--limit`. Use `--offset 20 --l
 
 `--fail-empty` returns exit status **2** when no results match, while preserving the selected output format. An offset beyond existing matches is not considered a failed search. Ordinary request or validation errors use status **1**.
 
+Add `--wide` to human output to preserve full titles and other table values, including custom columns. This can exceed the terminal width; pipe to `less -S` for horizontal scrolling.
+
 Use `--columns id,name,seeders,size,uploader` to choose and order table columns. Available columns are `id`, `name`, `seeders`, `leechers`, `size`, `files`, `category`, `uploader`, `status`, `date`, and `hash`. This option is for human tables and cannot be combined with export modes or inline magnets.
 
 Use `--jsonl` for one JSON torrent per line, with optional `--magnet`. Empty results emit no lines; errors are JSON on stderr. For request metadata and completeness counts, use `--json` instead.
