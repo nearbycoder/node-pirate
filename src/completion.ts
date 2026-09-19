@@ -79,7 +79,7 @@ export function completionCandidates(words: readonly string[]): string[] {
 
 
   if (previous && valueOptions.has(previous)) {
-    return completeValue(previous, current)
+    return completeValue(previous, current === "=" ? "" : current)
   }
 
   const context = findCommand(completed)

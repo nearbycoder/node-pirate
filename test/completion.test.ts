@@ -36,6 +36,7 @@ describe("shell completion", () => {
 
 test("completes inline values, Bash word breaks, and comma-separated lists", () => {
   expect(completionCandidates(["search", "--sort=s"])).toEqual(["--sort=seeders", "--sort=size"])
+  expect(completionCandidates(["search", "--direction", "="])).toEqual(["asc", "desc"])
   expect(completionCandidates(["search", "--sort", "=", "s"])).toEqual(["seeders", "size"])
   expect(completionCandidates(["search", "--category=movies,t"])).toEqual(["--category=movies,tv"])
   expect(completionCandidates(["search", "--columns", "id,na"])).toEqual(["id,name"])
