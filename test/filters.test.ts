@@ -48,3 +48,9 @@ test("include-any alternatives combine with required terms and exclusions", () =
   expect(filterResponse(response, { ...filters, exclude: ["stable"] }, 0).results).toEqual([])
   expect(() => parseFilters({ includeAny: [" "] })).toThrow()
 })
+
+test("uploader exclusions are exact, case insensitive, and repeatable", () => {
+  expect(filterResponse(response, parseFilters({ excludeUploader: ["other", "PUBLISHER"] }), 0).results).toEqual([])
+  expect(filterResponse(response, parseFilters({ excludeUploader: ["publish"] }), 0).results).toHaveLength(2)
+  expect(() => parseFilters({ excludeUploader: [" "] })).toThrow()
+})

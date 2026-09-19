@@ -356,6 +356,7 @@ for (const name of ["search", "top"]) {
     .option("--min-seeders <number>", "require at least this many seeders")
     .option("--min-size <size>", "minimum size, e.g. 500MB or 1GiB")
     .option("--max-size <size>", "maximum size, e.g. 2GB or 2GiB")
+    .option("--exclude-uploader <name>", "hide an exact uploader name; repeat for more names", collect)
     .option("--uploader <name>", "exact uploader name (case-insensitive)")
     .option("--trusted", "only trusted or VIP uploaders (API-reported status)")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
