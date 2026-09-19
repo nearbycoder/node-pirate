@@ -233,3 +233,8 @@ export function categoryLabel(category: number): string {
             ? "Other"
             : "Any"
 }
+
+export function matchesCategory(torrentCategory: number, requested: CategoryFilter): boolean {
+  const ids = typeof requested === "number" ? [requested] : requested
+  return ids.some((id) => id === 0 || (id % 100 === 0 ? Math.floor(torrentCategory / 100) === id / 100 : torrentCategory === id))
+}

@@ -350,6 +350,7 @@ program
 for (const name of ["search", "top"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
+    .option("--exclude-category <category>", "hide category names or IDs, separated by commas")
     .option("--include-any <text>", "require any of these title terms; repeat for alternatives", collect)
     .option("--include <text>", "require title text (case-insensitive); repeat to require every term", collect)
     .option("--exclude <text>", "hide titles containing text (case-insensitive); repeat for more terms", collect)
