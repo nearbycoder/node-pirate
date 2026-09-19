@@ -4,12 +4,12 @@ import { sanitizeSingleLine } from "./text.ts"
 
 export const exportColumns = ["id", "name", "seeders", "leechers", "size", "fileCount", "category", "username", "status", "addedAt"] as const
 
-export function delimitedResults(torrents: readonly TorrentSummary[], format: "csv" | "tsv", includeMagnet = false): string {
+export function delimitedResults(torrents: readonly TorrentSummary[], format: "csv" | "tsv", includeMagnet = false, trackers?: readonly string[]): string {
   const delimiter = format === "csv" ? "," : "\t"
   const columns = [...exportColumns, ...(includeMagnet ? ["magnet"] : [])]
   const rows = torrents.map((torrent) => {
     const values = exportColumns.map((column) => torrent[column])
-    return [...values, ...(includeMagnet ? [createMagnetUri(torrent)] : [])]
+    return [...values, ...(includeMagnet ? [createMagnetUri(torrent, trackers)] : [])]
   })
   return [columns, ...rows].map((row) => row.map((value) => {
     if (value instanceof Date) return value.toISOString()

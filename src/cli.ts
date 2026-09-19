@@ -8,7 +8,7 @@ import { delimitedResults } from "./export.ts"
 import { filterResponse, parseFilters } from "./filters.ts"
 import { formatResultHeader, formatResultLine } from "./format.ts"
 import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
-import { createMagnetUri } from "./magnet.ts"
+import { createMagnetUri as buildMagnetUri } from "./magnet.ts"
 import { sanitizeMultiline, sanitizeSingleLine } from "./text.ts"
 import { runTui, type TuiView } from "./tui.ts"
 import { VERSION } from "./version.ts"
@@ -20,6 +20,7 @@ interface GlobalOptions {
 }
 
 const jsonOutputRequested = ["--json", "--jsonl"].some((option) => hasOptionBeforeTerminator(process.argv.slice(2), option))
+let magnetTrackers: readonly string[] | undefined
 const program = new Command()
   .name("node-pirate")
   .description("Search API Bay with automatic endpoint failover in a modern OpenTUI interface.")
@@ -405,7 +406,7 @@ function printPlainResults(response: SearchResponse, options: { ids?: boolean; m
     return true
   }
   if (options.format) {
-    console.log(delimitedResults(response.results, options.format, options.magnet))
+    console.log(delimitedResults(response.results, options.format, options.magnet, magnetTrackers))
     return true
   }
   if (options.count) {
@@ -422,6 +423,17 @@ function printFilterSummary(response: SearchResponse): void {
     console.log(`\n${removed} filtered out of ${response.unfilteredResults} fetched results.`)
   }
   if (response.results.length < (response.availableResults ?? 0)) console.log("Use --limit 0 --offset 0 to show all matching results.")
+}
+
+for (const name of ["search", "top", "details", "magnet", "download"]) {
+  program.commands.find((command) => command.name() === name)!.option("--no-trackers", "omit tracker URLs from generated magnets")
+}
+program.hook("preAction", (_program, command) => {
+  magnetTrackers = command.opts().trackers === false ? [] : undefined
+})
+
+function createMagnetUri(torrent: TorrentSummary): string {
+  return buildMagnetUri(torrent, magnetTrackers)
 }
 
 // The root command accepts a free argument so it can provide a direct unknown-command

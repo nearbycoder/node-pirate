@@ -110,7 +110,7 @@ describe("CLI validation and help", () => {
     const result = await runCli(["--help"])
     expect(result.code).toBe(0)
     expect(result.stdout).toContain("imdb [options] <id>")
-    expect(result.stdout).toContain("magnet <id>")
+    expect(result.stdout).toContain("magnet [options] <id>")
     expect(result.stdout).toContain("config")
     expect(result.stdout).toContain("completion [shell]")
     expect(result.stdout).not.toContain("__complete")
@@ -566,4 +566,15 @@ test("JSON Lines emits independently parseable records and JSON errors", async (
   const invalid = await runCli([...args, "--limit", "bad"])
   expect(invalid.code).toBe(1)
   expect(JSON.parse(invalid.stderr).error).toContain("limit")
+})
+
+test("tracker-free magnets work in direct, JSON, and CSV output", async () => {
+  const env = { NODE_PIRATE_TEST_FETCH: "fixture" }
+  const endpoint = ["--endpoint", "https://healthy.test/"]
+  for (const args of [["magnet", "42"], ["search", "movie", "--json", "--magnet"], ["search", "movie", "--format", "csv", "--magnet"]]) {
+    const result = await runCli([...endpoint, ...args, "--no-trackers"], env)
+    expect(result.code).toBe(0)
+    expect(result.stdout).toContain("magnet:?xt=urn:btih:")
+    expect(result.stdout).not.toContain("&tr=")
+  }
 })

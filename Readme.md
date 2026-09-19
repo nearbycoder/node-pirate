@@ -173,6 +173,8 @@ Add `--wide` to human output to preserve full titles and other table values, inc
 
 Use `--columns id,name,seeders,size,uploader` to choose and order table columns. Available columns are `id`, `name`, `seeders`, `leechers`, `size`, `files`, `category`, `uploader`, `status`, `date`, and `hash`. This option is for human tables and cannot be combined with export modes or inline magnets.
 
+Add `--no-trackers` to `search`, `top`, `details`, `magnet`, or `download` to omit tracker URLs from generated magnets, including JSON and delimited exports. Hashes and display names remain intact.
+
 Use `--jsonl` for one JSON torrent per line, with optional `--magnet`. Empty results emit no lines; errors are JSON on stderr. For request metadata and completeness counts, use `--json` instead.
 
 Use `--format csv` or `--format tsv` to export a header row and structured columns with byte sizes and ISO dates. Add `--magnet` for a magnet column. Text cells that could execute spreadsheet formulas are prefixed with an apostrophe. These formats cannot be combined with JSON, counts, or plain ID/magnet output.
