@@ -126,6 +126,7 @@ Examples:
       limit: 0,
     }), filters, limit, offset)
     if (options.failEmpty && response.availableResults === 0) process.exitCode = 2
+    if (options.strict && response.partial) process.exitCode = 3
 
     if (options.json) {
       console.log(JSON.stringify({
@@ -185,6 +186,7 @@ Examples:
       reverse,
     }), filters, limit, offset)
     if (options.failEmpty && response.availableResults === 0) process.exitCode = 2
+    if (options.strict && response.partial) process.exitCode = 3
     if (options.json) {
       console.log(JSON.stringify({
         request: {
@@ -356,6 +358,7 @@ program
 for (const name of ["search", "top"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
+    .option("--strict", "exit with status 3 if any result feed is unavailable")
     .option("--fail-empty", "exit with status 2 when no results match (before pagination)")
     .option("--offset <number>", "skip this many matching results before --limit", "0")
     .option("--exclude-category <category>", "hide category names or IDs, separated by commas")

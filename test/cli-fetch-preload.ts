@@ -11,6 +11,7 @@ if (process.env.NODE_PIRATE_TEST_FETCH === "fixture") {
   globalThis.fetch = (async (input) => {
     const url = new URL(input instanceof Request ? input.url : String(input))
     if (url.hostname.endsWith("unhealthy.test")) throw new TypeError("fixture endpoint unavailable")
+    if (process.env.NODE_PIRATE_TEST_PARTIAL && url.pathname.endsWith("data_top100_recent.json")) throw new TypeError("fixture feed unavailable")
     const expectedQuery = process.env.NODE_PIRATE_TEST_EXPECT_QUERY
     if (expectedQuery && url.pathname.endsWith("/q.php") && url.searchParams.get("q") !== expectedQuery) {
       throw new TypeError(`expected query ${JSON.stringify(expectedQuery)}`)

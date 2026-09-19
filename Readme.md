@@ -165,6 +165,8 @@ Text and uploader matching ignore case. Text is literal, so punctuation is not i
 
 Filters run locally on the fetched feeds, before `--limit`. Use `--offset 20 --limit 20` to show the next 20 matches in the chosen sort order. Offsets operate on the fetched results, not server-side pages; repeated calls can change as upstream rankings change. Use `--limit 0` for all matches available in those feeds. Human output reports how many entries were filtered out and suggests widening filters when nothing matches. JSON includes normalized `request.filters`, `unfilteredResults`, and `filteredOut` when filters are active; `availableResults` counts matches before the limit.
 
+`--strict` on search or top returns exit status **3** for partial feed failures while retaining available results. It takes precedence over `--fail-empty`; complete request failures still return **1**.
+
 `--fail-empty` returns exit status **2** when no results match, while preserving the selected output format. An offset beyond existing matches is not considered a failed search. Ordinary request or validation errors use status **1**.
 
 `--count` prints the total number of matches before offset and limit, including `0` for an empty result. Use it for quick counts in scripts; it cannot be combined with other output modes.

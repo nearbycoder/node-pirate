@@ -16,7 +16,7 @@ const commands = [
 ] as const
 
 const globalOptions = ["--help", "--version", "--endpoint", "--config", "--timeout"] as const
-const filterOptions = ["--fail-empty", "--count", "--offset", "--min-files", "--max-files", "--max-age", "--exclude-category", "--exclude-uploader", "--include-any", "--include", "--exclude", "--min-seeders", "--min-size", "--max-size", "--uploader", "--trusted", "--after", "--before", "--ids", "--magnets"] as const
+const filterOptions = ["--strict", "--fail-empty", "--count", "--offset", "--min-files", "--max-files", "--max-age", "--exclude-category", "--exclude-uploader", "--include-any", "--include", "--exclude", "--min-seeders", "--min-size", "--max-size", "--uploader", "--trusted", "--after", "--before", "--ids", "--magnets"] as const
 const optionsByCommand: Record<string, readonly string[]> = {
   tui: ["--help", "--view", "--category", "--sort", "--direction", "--reverse"],
   search: [...filterOptions, "--help", "--title", "--category", "--sort", "--direction", "--reverse", "--order", "--limit", "--json", "--magnet"],
@@ -46,7 +46,7 @@ const valueCandidates: Record<string, readonly string[]> = {
   "--view": ["all", "day", "24h", "week", "7d", "search"],
 }
 const valueOptions = new Set([
-  ...filterOptions.filter((option) => !["--trusted", "--ids", "--magnets", "--count", "--fail-empty"].includes(option)),
+  ...filterOptions.filter((option) => !["--trusted", "--ids", "--magnets", "--count", "--fail-empty", "--strict"].includes(option)),
   "--endpoint", "-e", "--config", "--timeout",
   "--title", "-t", "--view", "--category", "-c", "--sort", "-s", "--direction", "--order", "-o", "--limit", "-l", "--id", "-i",
 ])
