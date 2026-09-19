@@ -537,3 +537,14 @@ test("fail-empty distinguishes no matches from an empty page", async () => {
   expect(page.code).toBe(0)
   expect(JSON.parse(page.stdout).availableResults).toBe(2)
 })
+
+test("strict results retain JSON diagnostics and take precedence over fail-empty", async () => {
+  const args = ["top", "day", "--endpoint", "https://healthy.test/", "--json"]
+  const env = { NODE_PIRATE_TEST_FETCH: "fixture", NODE_PIRATE_TEST_PARTIAL: "1" }
+  const ordinary = await runCli(args, env)
+  expect(ordinary.code).toBe(0)
+  const strict = await runCli([...args, "--strict", "--fail-empty"], env)
+  expect(strict.code).toBe(3)
+  expect(JSON.parse(strict.stdout).partial).toBe(true)
+  expect(JSON.parse(strict.stdout).failedSources).toBe(1)
+})
