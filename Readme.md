@@ -127,6 +127,16 @@ Magnet output uses the canonical Deluge-compatible prefix `magnet:?xt=urn:btih:.
 
 Combine categories with commas, for example `--category movies,tv` or `--category 301,302`. Named groups expand to their category IDs, duplicates are removed, and `all` includes every category. This also works when starting the TUI.
 
+## Reuse saved results offline
+
+```sh
+node-pirate search ubuntu --limit 0 --json > saved.json
+node-pirate filter saved.json --exclude beta --min-seeders 5 --ids
+cat saved.json | node-pirate filter --max-size 2GiB --format csv
+```
+
+`filter` reads a saved JSON response or torrent array, makes no API requests, and accepts the same filters, sorting, pagination, and output options as search. Counts describe the saved records only; save with `--limit 0` to retain all fetched matches. Input is validated and limited to 8 MiB / 5,000 records. Source partial-failure metadata is retained.
+
 ## Filtering results
 
 Both `search` and `top` support the same filters:

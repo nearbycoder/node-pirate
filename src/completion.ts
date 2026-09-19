@@ -4,6 +4,7 @@ export type SupportedShell = typeof supportedShells[number]
 const commands = [
   "tui",
   "search",
+  "filter",
   "top",
   "details",
   "magnet",
@@ -21,6 +22,7 @@ const optionsByCommand: Record<string, readonly string[]> = {
   tui: ["--help", "--view", "--category", "--sort", "--direction", "--reverse"],
   search: [...filterOptions, "--help", "--title", "--category", "--sort", "--direction", "--reverse", "--order", "--limit", "--json", "--magnet"],
   top: [...filterOptions, "--help", "--category", "--sort", "--direction", "--reverse", "--limit", "--json", "--magnet"],
+  filter: [...filterOptions, "--help", "--category", "--sort", "--direction", "--reverse", "--limit", "--json", "--magnet"],
   details: ["--no-trackers", "--help", "--json", "--magnet"],
   magnet: ["--no-trackers", "--help"],
   imdb: ["--help", "--search"],

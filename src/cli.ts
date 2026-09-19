@@ -2,7 +2,7 @@ import { Command, CommanderError, Option } from "commander"
 import { ApiBayClient, EndpointPoolError, redactEndpoint } from "./api.ts"
 import { completionCandidates, completionScript, resolveCompletionShell } from "./completion.ts"
 import { loadConfig, type ResolvedConfig } from "./config.ts"
-import { categoryGroups, categoryLabel, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
+import { categoryGroups, categoryLabel, matchesCategory, sortTorrents, formatBytes, formatDate, parseCategory, parseSort, parseTopPeriod, reverseForSortDirection, sortDirection, type CategoryFilter, type SearchResponse, type SortDirection, type SortOrder, type TorrentSummary } from "./domain.ts"
 import { customTable, parseColumns, type TableColumn } from "./columns.ts"
 import { delimitedResults } from "./export.ts"
 import { filterResponse, parseFilters } from "./filters.ts"
@@ -11,6 +11,7 @@ import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
 import { createMagnetUri as buildMagnetUri } from "./magnet.ts"
 import { sanitizeMultiline, sanitizeSingleLine } from "./text.ts"
 import { runTui, type TuiView } from "./tui.ts"
+import { readSavedResults } from "./offline.ts"
 import { parseTorrentReference } from "./torrent-id.ts"
 import { VERSION } from "./version.ts"
 
@@ -221,6 +222,42 @@ Examples:
   })
 
 program
+  .command("filter")
+  .description("filter saved search JSON without making network requests")
+  .argument("[file]", "saved JSON file, or - for stdin", "-")
+  .option("-c, --category <category>", "category name, ID, or comma-separated list", "all")
+  .option("-s, --sort <order>", "category, seeders, leechers, date, size, or name", "seeders")
+  .option("-r, --reverse", "reverse the selected sort's default direction")
+  .addOption(new Option("--direction <direction>", "explicit sort direction").choices(["asc", "desc"]).conflicts("reverse"))
+  .option("-l, --limit <number>", "maximum results; 0 returns all saved matches", "0")
+  .option("--json", "emit machine-readable JSON")
+  .option("--magnet", "include magnet links")
+  .action(async (file: string, options) => {
+    const sort = parseSort(options.sort)
+    const reverse = options.direction ? reverseForSortDirection(sort, options.direction) : Boolean(options.reverse)
+    const category = parseCategory(options.category)
+    const filters = parseFilters(options)
+    const columns = options.columns ? parseColumns(options.columns) : undefined
+    const limit = nonNegativeInteger(options.limit, "limit")
+    const offset = nonNegativeInteger(options.offset, "offset")
+    const saved = await readSavedResults(file)
+    saved.results = sortTorrents(saved.results.filter((row) => matchesCategory(row.category, category)), sort, reverse)
+    const response = filterResponse(saved, filters, limit, offset)
+    if (options.failEmpty && response.availableResults === 0) process.exitCode = 2
+    if (options.strict && response.partial) process.exitCode = 3
+    if (options.json) {
+      console.log(JSON.stringify({ request: { mode: "filter", category: categoryIds(category), sort, direction: sortDirection(sort, reverse), reverse, limit, offset, filters }, ...serializeSearchResponse(response, options.magnet) }, null, 2))
+      return
+    }
+    if (printPlainResults(response, options)) return
+    console.log(`Saved results · ${resultCountLabel(response)}\n`)
+    printPartialWarning(response)
+    printTorrentTable(response.results, sort, options.magnet, reverse, columns, options.wide)
+    printFilterSummary(response)
+    if (!response.results.length) console.log("No saved results match. Try relaxing your filters.")
+  })
+
+program
   .command("details")
   .description("show details for a Pirate Bay torrent ID")
   .argument("<id>", "numeric torrent ID or torrent page URL")
@@ -361,7 +398,7 @@ program
   })
 
 // Keep search and ranking filters identical, including output-mode conflicts.
-for (const name of ["search", "top"]) {
+for (const name of ["search", "top", "filter"]) {
   const command = program.commands.find((command) => command.name() === name)!
   command
     .addOption(new Option("--wide", "show full table values without truncation").conflicts(["json", "jsonl", "format", "ids", "magnets", "count"]))
@@ -395,8 +432,8 @@ Filtering:
   --include requires every term; --exclude removes any matching term.
   Sizes: MB/GB use base 1000; MiB/GiB use base 1024. Date bounds include the day.
 
-  node-pirate ${name} ${name === "search" ? "ubuntu" : "week"} --exclude beta --min-seeders 5 --max-size 4GiB
-  node-pirate ${name} ${name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
+  node-pirate ${name} ${name === "filter" ? "saved.json" : name === "search" ? "ubuntu" : "week"} --exclude beta --min-seeders 5 --max-size 4GiB
+  node-pirate ${name} ${name === "filter" ? "saved.json" : name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
 }
 
 function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean; jsonl?: boolean; format?: "csv" | "tsv"; magnet?: boolean }): boolean {
@@ -426,7 +463,7 @@ function printFilterSummary(response: SearchResponse): void {
   if (response.results.length < (response.availableResults ?? 0)) console.log("Use --limit 0 --offset 0 to show all matching results.")
 }
 
-for (const name of ["search", "top", "details", "magnet", "download"]) {
+for (const name of ["search", "top", "filter", "details", "magnet", "download"]) {
   program.commands.find((command) => command.name() === name)!.option("--no-trackers", "omit tracker URLs from generated magnets")
 }
 program.hook("preAction", (_program, command) => {
