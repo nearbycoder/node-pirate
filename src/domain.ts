@@ -68,6 +68,7 @@ export interface SearchResponse {
   availableResults?: number
   /** Number fetched before CLI result filters, when filters are active. */
   unfilteredResults?: number
+  offset?: number
   partial?: boolean
   failedSources?: number
 }

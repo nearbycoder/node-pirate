@@ -505,3 +505,12 @@ describe("CLI result filtering and pipe output", () => {
     expect(value.stdout).toBe("")
   })
 })
+
+test("CLI offset reports page position and preserves total matches", async () => {
+  const result = await runCli(["search", "movie", "--offset", "1", "--limit", "1", "--json", "--endpoint", "https://healthy.test/"], { NODE_PIRATE_TEST_FETCH: "fixture" })
+  expect(result.code).toBe(0)
+  const data = JSON.parse(result.stdout)
+  expect(data.results.map((row: { id: string }) => row.id)).toEqual(["43"])
+  expect(data.offset).toBe(1)
+  expect(data.availableResults).toBe(2)
+})

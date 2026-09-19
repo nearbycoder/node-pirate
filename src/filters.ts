@@ -120,11 +120,12 @@ function matches(torrent: TorrentSummary, filters: ResultFilters): boolean {
     && (filters.before === undefined || torrent.addedAt.getTime() < Date.parse(`${filters.before}T00:00:00Z`) + 86_400_000)
 }
 
-export function filterResponse(response: SearchResponse, filters: ResultFilters, limit: number): SearchResponse {
+export function filterResponse(response: SearchResponse, filters: ResultFilters, limit: number, offset = 0): SearchResponse {
   const results = response.results.filter((torrent) => matches(torrent, filters))
   return {
     ...response,
-    results: limit === 0 ? results : results.slice(0, limit),
+    results: results.slice(offset, limit === 0 ? undefined : offset + limit),
+    ...(offset ? { offset } : {}),
     availableResults: results.length,
     ...(Object.keys(filters).length ? { unfilteredResults: response.results.length } : {}),
   }

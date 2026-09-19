@@ -76,3 +76,9 @@ test("file count bounds are inclusive and validated", () => {
   expect(() => parseFilters({ minFiles: "2", maxFiles: "1" })).toThrow()
   expect(() => parseFilters({ maxFiles: "1.5" })).toThrow()
 })
+
+test("offset follows filtering and works with unlimited output", () => {
+  expect(filterResponse(response, {}, 0, 1).results.map((row) => row.id)).toEqual(["2"])
+  expect(filterResponse(response, { exclude: ["stable"] }, 1, 1).results).toEqual([])
+  expect(filterResponse(response, {}, 1, 100).availableResults).toBe(2)
+})

@@ -163,7 +163,7 @@ node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
 
 Text and uploader matching ignore case. Text is literal, so punctuation is not interpreted as a regular expression. All filters combine with AND. MB/GB use powers of 1000; MiB/GiB use powers of 1024. Status filtering reflects upstream metadata, not a guarantee about a file.
 
-Filters run locally on the fetched feeds, before `--limit`. Use `--limit 0` for all matches available in those feeds. Human output reports how many entries were filtered out and suggests widening filters when nothing matches. JSON includes normalized `request.filters`, `unfilteredResults`, and `filteredOut` when filters are active; `availableResults` counts matches before the limit.
+Filters run locally on the fetched feeds, before `--limit`. Use `--offset 20 --limit 20` to show the next 20 matches in the chosen sort order. Offsets operate on the fetched results, not server-side pages; repeated calls can change as upstream rankings change. Use `--limit 0` for all matches available in those feeds. Human output reports how many entries were filtered out and suggests widening filters when nothing matches. JSON includes normalized `request.filters`, `unfilteredResults`, and `filteredOut` when filters are active; `availableResults` counts matches before the limit.
 
 `--ids` and `--magnets` produce only one value per line, with empty output and a successful exit when nothing matches. They cannot be combined with each other, `--json`, or `--magnet` (which adds links to the regular output). Partial-feed warnings still go to stderr.
 
