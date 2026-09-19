@@ -1,6 +1,8 @@
 import { matchesCategory, parseCategory, type CategoryFilter, type SearchResponse, type TorrentSummary } from "./domain.ts"
 
 export interface ResultFilters {
+  minFiles?: number
+  maxFiles?: number
   newerThan?: string
   excludeCategory?: CategoryFilter
   includeAny?: string[]
@@ -17,6 +19,8 @@ export interface ResultFilters {
 }
 
 export interface FilterOptions {
+  minFiles?: string
+  maxFiles?: string
   maxAge?: string
   excludeCategory?: string
   includeAny?: string[]
@@ -69,10 +73,17 @@ export function parseFilters(options: FilterOptions, now = Date.now()): ResultFi
       filters[key] = terms
     }
   }
-  if (options.minSeeders !== undefined) {
-    const number = Number(options.minSeeders)
-    if (!/^\d+$/.test(options.minSeeders) || !Number.isSafeInteger(number)) throw new Error("min-seeders must be zero or a positive integer.")
-    filters.minSeeders = number
+  for (const key of ["minSeeders", "minFiles", "maxFiles"] as const) {
+    if (options[key] !== undefined) {
+      const value = options[key]!
+      const number = Number(value)
+      const label = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+      if (!/^\d+$/.test(value) || !Number.isSafeInteger(number)) throw new Error(`${label} must be zero or a positive integer.`)
+      filters[key] = number
+    }
+  }
+  if (filters.minFiles !== undefined && filters.maxFiles !== undefined && filters.minFiles > filters.maxFiles) {
+    throw new Error("--min-files cannot exceed --max-files.")
   }
   if (options.minSize !== undefined) filters.minSize = parseSize(options.minSize)
   if (options.maxSize !== undefined) filters.maxSize = parseSize(options.maxSize)
@@ -97,6 +108,8 @@ function matches(torrent: TorrentSummary, filters: ResultFilters): boolean {
     && (!filters.includeAny?.length || filters.includeAny.some((term) => name.includes(term.toLowerCase())))
     && !(filters.exclude ?? []).some((term) => name.includes(term.toLowerCase()))
     && (filters.minSeeders === undefined || torrent.seeders >= filters.minSeeders)
+    && (filters.minFiles === undefined || torrent.fileCount >= filters.minFiles)
+    && (filters.maxFiles === undefined || torrent.fileCount <= filters.maxFiles)
     && (filters.minSize === undefined || torrent.size >= filters.minSize)
     && (filters.maxSize === undefined || torrent.size <= filters.maxSize)
     && (filters.uploader === undefined || torrent.username.toLowerCase() === filters.uploader.toLowerCase())

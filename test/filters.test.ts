@@ -68,3 +68,11 @@ test("relative upload ages resolve to an inclusive timestamp", () => {
   expect(parseFilters({ maxAge: "0.5w" }, now).newerThan).toBe("2024-03-07T11:59:59.000Z")
   for (const maxAge of ["0d", "-1d", "1month", "Infinityh"]) expect(() => parseFilters({ maxAge }, now)).toThrow()
 })
+
+test("file count bounds are inclusive and validated", () => {
+  expect(filterResponse(response, parseFilters({ minFiles: "1", maxFiles: "1" }), 0).results).toHaveLength(2)
+  expect(filterResponse(response, parseFilters({ minFiles: "2" }), 0).results).toHaveLength(0)
+  expect(filterResponse(response, parseFilters({ maxFiles: "0" }), 0).results).toHaveLength(0)
+  expect(() => parseFilters({ minFiles: "2", maxFiles: "1" })).toThrow()
+  expect(() => parseFilters({ maxFiles: "1.5" })).toThrow()
+})

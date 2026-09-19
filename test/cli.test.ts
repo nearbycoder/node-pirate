@@ -500,7 +500,7 @@ describe("CLI result filtering and pipe output", () => {
 
   test("completion exposes filters and treats their arguments as values", async () => {
     const flags = await runCli(["__complete", "--", "search", "--min-"])
-    expect(flags.stdout).toBe("--min-seeders\n--min-size\n")
+    expect(flags.stdout).toBe("--min-files\n--min-seeders\n--min-size\n")
     const value = await runCli(["__complete", "--", "top", "--exclude", ""])
     expect(value.stdout).toBe("")
   })
