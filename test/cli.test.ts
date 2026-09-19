@@ -555,3 +555,15 @@ test("CLI exports delimited rows without table prose", async () => {
   expect(result.stdout).toStartWith("id,name,seeders,")
   expect(result.stdout.trim().split("\n")).toHaveLength(2)
 })
+
+test("JSON Lines emits independently parseable records and JSON errors", async () => {
+  const args = ["search", "movie", "--jsonl", "--magnet", "--endpoint", "https://healthy.test/"]
+  const result = await runCli(args, { NODE_PIRATE_TEST_FETCH: "fixture" })
+  expect(result.code).toBe(0)
+  const rows = result.stdout.trim().split("\n").map((line) => JSON.parse(line))
+  expect(rows.map((row) => row.id)).toEqual(["42", "43"])
+  expect(rows[0].magnet).toStartWith("magnet:")
+  const invalid = await runCli([...args, "--limit", "bad"])
+  expect(invalid.code).toBe(1)
+  expect(JSON.parse(invalid.stderr).error).toContain("limit")
+})
