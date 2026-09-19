@@ -370,6 +370,7 @@ for (const name of ["search", "top"]) {
     .option("--max-age <duration>", "maximum upload age, e.g. 12h, 7d, or 2w")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
     .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
+    .addOption(new Option("--count", "print the number of matches before offset and limit").conflicts(["json", "magnet", "ids", "magnets"]))
     .addOption(new Option("--ids", "print only one torrent ID per line").conflicts(["json", "magnet", "magnets"]))
     .addOption(new Option("--magnets", "print only one magnet URI per line").conflicts(["json", "magnet", "ids"]))
     .addHelpText("after", `
@@ -382,9 +383,13 @@ Filtering:
   node-pirate ${name} ${name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
 }
 
-function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean }): boolean {
-  if (!options.ids && !options.magnets) return false
+function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean }): boolean {
+  if (!options.ids && !options.magnets && !options.count) return false
   printPartialWarning(response)
+  if (options.count) {
+    console.log(response.availableResults ?? response.results.length)
+    return true
+  }
   for (const torrent of response.results) console.log(options.ids ? torrent.id : createMagnetUri(torrent))
   return true
 }

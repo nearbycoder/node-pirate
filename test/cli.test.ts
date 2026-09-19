@@ -514,3 +514,15 @@ test("CLI offset reports page position and preserves total matches", async () =>
   expect(data.offset).toBe(1)
   expect(data.availableResults).toBe(2)
 })
+
+test("count output counts matches before pagination and prints zero", async () => {
+  const args = ["search", "movie", "--endpoint", "https://healthy.test/", "--count"]
+  const env = { NODE_PIRATE_TEST_FETCH: "fixture" }
+  const all = await runCli([...args, "--offset", "20", "--limit", "1"], env)
+  expect(all.code).toBe(0)
+  expect(all.stdout).toBe("2\n")
+  const none = await runCli([...args, "--exclude", "movie"], env)
+  expect(none.stdout).toBe("0\n")
+  const conflict = await runCli([...args, "--json"], env)
+  expect(conflict.code).toBe(1)
+})
