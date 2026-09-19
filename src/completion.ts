@@ -1,3 +1,5 @@
+import { tableColumns } from "./columns.ts"
+
 export const supportedShells = ["bash", "zsh", "fish"] as const
 export type SupportedShell = typeof supportedShells[number]
 
@@ -38,6 +40,7 @@ const sortCandidates = ["category", "seeders", "leechers", "date", "size", "name
 const periodCandidates = ["day", "24h", "week", "7d", "all"] as const
 const valueCandidates: Record<string, readonly string[]> = {
   "--format": ["csv", "tsv"],
+  "--columns": tableColumns,
   "--category": categoryCandidates,
   "--exclude-category": categoryCandidates,
   "-c": categoryCandidates,
@@ -64,9 +67,19 @@ export function completionCandidates(words: readonly string[]): string[] {
   const current = words.at(-1) ?? ""
   const completed = words.slice(0, -1)
   const previous = completed.at(-1)
+  if (completed.includes("--")) return []
+  const inline = /^(--[^=]+)=(.*)$/.exec(current)
+  if (inline && valueOptions.has(inline[1]!)) {
+    return completeValue(inline[1]!, inline[2]!).map((value) => `${inline[1]}=${value}`)
+  }
+  // Bash treats = as a word break, unlike Fish and Zsh.
+  if (previous === "=" && completed.at(-2) && valueOptions.has(completed.at(-2)!)) {
+    return completeValue(completed.at(-2)!, current)
+  }
+
 
   if (previous && valueOptions.has(previous)) {
-    return filterCandidates(valueCandidates[previous] ?? [], current)
+    return completeValue(previous, current)
   }
 
   const context = findCommand(completed)
@@ -156,4 +169,15 @@ function commandOperands(words: readonly string[]): string[] {
 
 function filterCandidates(candidates: readonly string[], prefix: string): string[] {
   return [...new Set(candidates)].filter((candidate) => candidate.startsWith(prefix)).sort()
+}
+
+function completeValue(option: string, current: string): string[] {
+  if (["--category", "-c", "--exclude-category", "--columns"].includes(option) && current.includes(",")) {
+    const prefix = current.slice(0, current.lastIndexOf(",") + 1)
+    const selected = prefix.split(",")
+    return filterCandidates(valueCandidates[option] ?? [], current.slice(prefix.length))
+      .filter((value) => !selected.includes(value))
+      .map((value) => `${prefix}${value}`)
+  }
+  return filterCandidates(valueCandidates[option] ?? [], current)
 }
