@@ -173,6 +173,8 @@ Add `--wide` to human output to preserve full titles and other table values, inc
 
 Use `--columns id,name,seeders,size,uploader` to choose and order table columns. Available columns are `id`, `name`, `seeders`, `leechers`, `size`, `files`, `category`, `uploader`, `status`, `date`, and `hash`. This option is for human tables and cannot be combined with export modes or inline magnets.
 
+The `details`, `magnet`, `imdb`, and `download` commands accept IDs or torrent page URLs such as `https://thepiratebay.org/description.php?id=42` and `https://thepiratebay.org/torrent/42/title`. Only the ID is extracted; requests still use your configured API endpoints.
+
 Add `--no-trackers` to `search`, `top`, `details`, `magnet`, or `download` to omit tracker URLs from generated magnets, including JSON and delimited exports. Hashes and display names remain intact.
 
 Use `--jsonl` for one JSON torrent per line, with optional `--magnet`. Empty results emit no lines; errors are JSON on stderr. For request metadata and completeness counts, use `--json` instead.

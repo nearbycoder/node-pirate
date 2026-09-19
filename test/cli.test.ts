@@ -578,3 +578,9 @@ test("tracker-free magnets work in direct, JSON, and CSV output", async () => {
     expect(result.stdout).not.toContain("&tr=")
   }
 })
+
+test("details accepts a page URL while using the configured API", async () => {
+  const result = await runCli(["details", "https://unhealthy.test/torrent/42/title", "--json", "--endpoint", "https://healthy.test/"], { NODE_PIRATE_TEST_FETCH: "fixture" })
+  expect(result.code).toBe(0)
+  expect(JSON.parse(result.stdout).torrent.id).toBe("42")
+})

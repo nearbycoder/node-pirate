@@ -11,6 +11,7 @@ import { createImdbSearchUrl, createImdbUrl } from "./imdb.ts"
 import { createMagnetUri as buildMagnetUri } from "./magnet.ts"
 import { sanitizeMultiline, sanitizeSingleLine } from "./text.ts"
 import { runTui, type TuiView } from "./tui.ts"
+import { parseTorrentReference } from "./torrent-id.ts"
 import { VERSION } from "./version.ts"
 
 interface GlobalOptions {
@@ -222,11 +223,11 @@ Examples:
 program
   .command("details")
   .description("show details for a Pirate Bay torrent ID")
-  .argument("<id>", "numeric torrent ID")
+  .argument("<id>", "numeric torrent ID or torrent page URL")
   .option("--json", "emit machine-readable JSON")
   .option("--magnet", "include the magnet URI")
   .action(async (id: string, options) => {
-    const response = await (await createClient()).details(id)
+    const response = await (await createClient()).details(parseTorrentReference(id))
     if (options.json) {
       console.log(JSON.stringify({
         endpoint: response.endpoint,
@@ -259,32 +260,32 @@ program
 program
   .command("magnet")
   .description("print a magnet URI for a Pirate Bay torrent ID")
-  .argument("<id>", "numeric torrent ID")
+  .argument("<id>", "numeric torrent ID or torrent page URL")
   .action(async (id: string) => {
-    const { torrent } = await (await createClient()).details(id)
+    const { torrent } = await (await createClient()).details(parseTorrentReference(id))
     console.log(createMagnetUri(torrent))
   })
 
 program
   .command("imdb")
   .description("print a direct IMDb title URL or title-search URL for a torrent ID")
-  .argument("<id>", "numeric torrent ID")
+  .argument("<id>", "numeric torrent ID or torrent page URL")
   .option("--search", "always print an IMDb search based on the torrent title")
   .action(async (id: string, options) => {
-    const { torrent } = await (await createClient()).details(id)
+    const { torrent } = await (await createClient()).details(parseTorrentReference(id))
     console.log(options.search ? createImdbSearchUrl(torrent) : createImdbUrl(torrent))
   })
 
 program
   .command("download")
   .description("legacy alias that prints a torrent's magnet URI without opening it")
-  .argument("[id]", "numeric torrent ID")
+  .argument("[id]", "numeric torrent ID or torrent page URL")
   .option("-i, --id <id>", "legacy alias for the torrent ID")
   .action(async (argument: string | undefined, options) => {
     if (argument && options.id) throw new Error("Use either a positional torrent ID or --id, not both.")
     const id = argument ?? options.id
     if (!id) throw new Error("A torrent ID is required. Example: node-pirate download 12345")
-    const { torrent } = await (await createClient()).details(id)
+    const { torrent } = await (await createClient()).details(parseTorrentReference(id))
     console.log(createMagnetUri(torrent))
   })
 
