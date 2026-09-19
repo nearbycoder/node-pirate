@@ -19,7 +19,7 @@ const commands = [
 const globalOptions = ["--help", "--version", "--endpoint", "--config", "--timeout"] as const
 const filterOptions = ["--no-trackers", "--wide", "--columns", "--jsonl", "--format", "--strict", "--fail-empty", "--count", "--offset", "--min-files", "--max-files", "--max-age", "--exclude-category", "--exclude-uploader", "--include-any", "--include", "--exclude", "--min-seeders", "--min-size", "--max-size", "--uploader", "--trusted", "--after", "--before", "--ids", "--magnets"] as const
 const optionsByCommand: Record<string, readonly string[]> = {
-  tui: ["--help", "--view", "--category", "--sort", "--direction", "--reverse"],
+  tui: ["--exclude-category", "--include-any", "--include", "--exclude", "--min-seeders", "--min-files", "--max-files", "--min-size", "--max-size", "--exclude-uploader", "--uploader", "--trusted", "--max-age", "--after", "--before", "--help", "--view", "--category", "--sort", "--direction", "--reverse"],
   search: [...filterOptions, "--help", "--title", "--category", "--sort", "--direction", "--reverse", "--order", "--limit", "--json", "--magnet"],
   top: [...filterOptions, "--help", "--category", "--sort", "--direction", "--reverse", "--limit", "--json", "--magnet"],
   filter: [...filterOptions, "--help", "--category", "--sort", "--direction", "--reverse", "--limit", "--json", "--magnet"],

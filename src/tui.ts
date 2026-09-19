@@ -27,6 +27,7 @@ import {
   sortDirection,
   sortTorrents,
 } from "./domain.ts"
+import { filterResponse, type ResultFilters } from "./filters.ts"
 import { formatDetails, formatResultHeader, formatResultLine, resultSortAtColumn, resultSortColumns } from "./format.ts"
 import { createMagnetUri } from "./magnet.ts"
 import { createImdbSearchUrl } from "./imdb.ts"
@@ -56,6 +57,7 @@ export interface TuiController {
 }
 
 export interface TuiOptions {
+  filters?: ResultFilters
   initialQuery?: string
   initialView?: TuiView
   initialCategory?: CategoryFilter
@@ -68,6 +70,8 @@ export function createTui(
   source: TorrentDataSource,
   options: TuiOptions = {},
 ): TuiController {
+  const filters = options.filters ?? {}
+  const hasFilters = Object.keys(filters).length > 0
   const requestedCategory = options.initialCategory ?? 0
   const knownCategoryIndex = CATEGORY_CYCLE.findIndex(([, filter]) => categoryFiltersEqual(filter, requestedCategory))
   const categoryCycle: ReadonlyArray<readonly [string, CategoryFilter]> = knownCategoryIndex >= 0
@@ -442,6 +446,7 @@ export function createTui(
   }
 
   function showResponse(response: SearchResponse, label: string, focusResults = true): void {
+    if (hasFilters) response = filterResponse(response, filters, activeMode === "search" ? 100 : 500)
     torrents = response.results
     sortCurrentResults()
     if (torrents.length) {
@@ -455,7 +460,8 @@ export function createTui(
     const partialSuffix = response.partial
       ? ` • partial: ${response.failedSources ?? 1} source${response.failedSources === 1 ? "" : "s"} unavailable`
       : ""
-    setStatus(`${count} ${label.toLowerCase()} via ${new URL(response.endpoint).host}${partialSuffix}`)
+    const filterSuffix = hasFilters ? ` • filters active: ${(response.unfilteredResults ?? 0) - available} hidden` : ""
+    setStatus(`${count} ${label.toLowerCase()} via ${new URL(response.endpoint).host}${filterSuffix}${partialSuffix}`)
     if (response.partial) status.fg = "#F2C14E"
   }
 
@@ -636,7 +642,7 @@ export function createTui(
         category: categoryCycle[categoryIndex]?.[1] ?? 0,
         sort: SORT_CYCLE[sortIndex] ?? "seeders",
         reverse: sortReversed,
-        limit: 100,
+        limit: hasFilters ? 0 : 100,
         signal: request.signal,
       })
       if (request.signal.aborted || activeRequest !== request || activeMode !== "search") return
@@ -666,7 +672,7 @@ export function createTui(
         category: categoryCycle[categoryIndex]?.[1] ?? 0,
         sort: SORT_CYCLE[sortIndex] ?? "seeders",
         reverse: sortReversed,
-        limit: 500,
+        ...(hasFilters ? {} : { limit: 500 }),
         signal: request.signal,
         refresh,
       })

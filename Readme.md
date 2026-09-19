@@ -81,6 +81,8 @@ node-pirate tui --view week --category movies --sort date
 node-pirate tui --view all --category tv --sort name --direction desc
 ```
 
+The TUI also accepts the result filters described below, for example `node-pirate tui ubuntu --exclude beta --min-seeders 5`. These filters persist across searches, category changes, and ranking views for that session. The status line shows active filtering and hidden counts; filters apply before the display cap. Relative age is resolved at launch.
+
 The `tui` command can initialize `--view all|day|24h|week|7d|search`, any named or numeric `--category`, a `--sort` column, and either `--direction asc|desc` or `--reverse`. A positional query selects Search automatically; when `--view` is also supplied with a query it must explicitly be `search`, avoiding an ambiguous startup state.
 
 The interactive interface requires both terminal input and output. A bare `node-pirate` invocation in a pipe or CI job prints command help instead of emitting terminal-control sequences; an explicit noninteractive `node-pirate tui` exits with guidance to use `search`, `top`, or another command-mode operation.
