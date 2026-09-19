@@ -360,6 +360,7 @@ for (const name of ["search", "top"]) {
     .option("--exclude-uploader <name>", "hide an exact uploader name; repeat for more names", collect)
     .option("--uploader <name>", "exact uploader name (case-insensitive)")
     .option("--trusted", "only trusted or VIP uploaders (API-reported status)")
+    .option("--max-age <duration>", "maximum upload age, e.g. 12h, 7d, or 2w")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
     .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
     .addOption(new Option("--ids", "print only one torrent ID per line").conflicts(["json", "magnet", "magnets"]))

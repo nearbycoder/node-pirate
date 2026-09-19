@@ -60,3 +60,11 @@ test("category exclusions support parent groups and comma-separated IDs", () => 
   expect(filterResponse(response, parseFilters({ excludeCategory: "301,302" }), 0).results).toEqual([])
   expect(filterResponse(response, parseFilters({ excludeCategory: "movies,tv" }), 0).results).toHaveLength(2)
 })
+
+test("relative upload ages resolve to an inclusive timestamp", () => {
+  const now = Date.parse("2024-03-10T23:59:59Z")
+  expect(filterResponse(response, parseFilters({ maxAge: "1d" }, now), 0).results).toHaveLength(2)
+  expect(filterResponse(response, parseFilters({ maxAge: "23h" }, now), 0).results).toHaveLength(0)
+  expect(parseFilters({ maxAge: "0.5w" }, now).newerThan).toBe("2024-03-07T11:59:59.000Z")
+  for (const maxAge of ["0d", "-1d", "1month", "Infinityh"]) expect(() => parseFilters({ maxAge }, now)).toThrow()
+})

@@ -1,6 +1,7 @@
 import { matchesCategory, parseCategory, type CategoryFilter, type SearchResponse, type TorrentSummary } from "./domain.ts"
 
 export interface ResultFilters {
+  newerThan?: string
   excludeCategory?: CategoryFilter
   includeAny?: string[]
   include?: string[]
@@ -16,6 +17,7 @@ export interface ResultFilters {
 }
 
 export interface FilterOptions {
+  maxAge?: string
   excludeCategory?: string
   includeAny?: string[]
   include?: string[]
@@ -48,8 +50,17 @@ function parseDate(value: string, label: string): string {
   return value
 }
 
-export function parseFilters(options: FilterOptions): ResultFilters {
+export function parseFilters(options: FilterOptions, now = Date.now()): ResultFilters {
   const filters: ResultFilters = {}
+  if (options.maxAge !== undefined) {
+    const match = /^(\d+(?:\.\d+)?)(h|d|w)$/i.exec(options.maxAge.trim())
+    const multiplier = match ? { h: 3_600_000, d: 86_400_000, w: 604_800_000 }[match[2]!.toLowerCase()]! : 0
+    const age = match ? Number(match[1]) * multiplier : 0
+    if (!Number.isFinite(age) || age <= 0 || !Number.isFinite(new Date(now - age).getTime())) {
+      throw new Error("--max-age must be a positive duration such as 12h, 7d, or 2w.")
+    }
+    filters.newerThan = new Date(now - age).toISOString()
+  }
   if (options.excludeCategory !== undefined) filters.excludeCategory = parseCategory(options.excludeCategory)
   for (const key of ["include", "includeAny", "exclude", "excludeUploader"] as const) {
     if (options[key]) {
@@ -91,6 +102,7 @@ function matches(torrent: TorrentSummary, filters: ResultFilters): boolean {
     && (filters.uploader === undefined || torrent.username.toLowerCase() === filters.uploader.toLowerCase())
     && !(filters.excludeUploader ?? []).some((name) => torrent.username.toLowerCase() === name.toLowerCase())
     && (!filters.trusted || ["trusted", "vip"].includes(torrent.status.toLowerCase()))
+    && (filters.newerThan === undefined || torrent.addedAt.getTime() >= Date.parse(filters.newerThan))
     && (filters.after === undefined || torrent.addedAt.getTime() >= Date.parse(`${filters.after}T00:00:00Z`))
     && (filters.before === undefined || torrent.addedAt.getTime() < Date.parse(`${filters.before}T00:00:00Z`) + 86_400_000)
 }

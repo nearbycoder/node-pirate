@@ -157,6 +157,7 @@ node-pirate search debian --exclude beta --limit 5 --magnets > magnets.txt
 | `--exclude-uploader <name>` | Hide an exact uploader name (case-insensitive); repeat for more names |
 | `--uploader <name>` | Match an exact uploader name |
 | `--trusted` | Keep API-reported `trusted` and `vip` statuses |
+| `--max-age <duration>` | Keep uploads from the last `12h`, `7d`, or `2w`; decimal amounts are accepted |
 | `--after <YYYY-MM-DD>`, `--before <YYYY-MM-DD>` | Inclusive upload-date bounds in UTC |
 
 Text and uploader matching ignore case. Text is literal, so punctuation is not interpreted as a regular expression. All filters combine with AND. MB/GB use powers of 1000; MiB/GiB use powers of 1024. Status filtering reflects upstream metadata, not a guarantee about a file.
