@@ -106,6 +106,15 @@ export function parseCategory(value: string | undefined): CategoryFilter {
   if (!value) return categories.all
 
   const normalized = value.trim().toLowerCase()
+  if (normalized.includes(",")) {
+    const parts = normalized.split(",")
+    if (parts.some((part) => !part.trim())) throw new Error("Category lists cannot contain empty entries.")
+    const ids = [...new Set(parts.flatMap((part) => {
+      const parsed = parseCategory(part)
+      return typeof parsed === "number" ? [parsed] : [...parsed]
+    }))]
+    return ids.includes(0) ? 0 : ids
+  }
   if (normalized in categories) return categories[normalized as CategoryName]
 
   if (/^\d{1,3}$/.test(normalized)) {

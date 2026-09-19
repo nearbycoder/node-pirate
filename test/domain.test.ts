@@ -107,3 +107,11 @@ describe("domain helpers", () => {
     )
   })
 })
+
+test("category lists combine names and IDs without duplicates", () => {
+  expect(parseCategory("movies, tv,207")).toEqual([201, 202, 207, 209, 205, 208])
+  expect(parseCategory("applications,301")).toEqual([300, 301])
+  expect(parseCategory("all,movies")).toBe(0)
+  expect(() => parseCategory("movies,,tv")).toThrow("empty entries")
+  expect(() => parseCategory("movies,unknown")).toThrow("Unknown category")
+})

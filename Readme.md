@@ -125,6 +125,8 @@ If OpenTUI cannot emit OSC 52, the magnet action shows the complete link in the 
 
 Magnet output uses the canonical Deluge-compatible prefix `magnet:?xt=urn:btih:...` without percent-encoding the `urn:btih:` portion. The display name and tracker values remain safely encoded.
 
+Combine categories with commas, for example `--category movies,tv` or `--category 301,302`. Named groups expand to their category IDs, duplicates are removed, and `all` includes every category. This also works when starting the TUI.
+
 ## Filtering results
 
 Both `search` and `top` support the same filters:
