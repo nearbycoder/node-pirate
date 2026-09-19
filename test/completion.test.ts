@@ -16,7 +16,7 @@ describe("shell completion", () => {
     expect(completionCandidates(["search", "--direction", "d"])).toEqual(["desc"])
     expect(completionCandidates(["top", "w"])).toEqual(["week"])
     expect(completionCandidates(["completion", "f"])).toEqual(["fish"])
-    expect(completionCandidates(["search", "--j"])).toEqual(["--json"])
+    expect(completionCandidates(["search", "--j"])).toEqual(["--json", "--jsonl"])
     expect(completionCandidates(["tui", "--view", "2"])).toEqual(["24h"])
     expect(completionCandidates(["tui", "--category", "t"])).toEqual(["tv"])
   })

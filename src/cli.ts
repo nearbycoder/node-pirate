@@ -18,7 +18,7 @@ interface GlobalOptions {
   timeout?: string
 }
 
-const jsonOutputRequested = hasOptionBeforeTerminator(process.argv.slice(2), "--json")
+const jsonOutputRequested = ["--json", "--jsonl"].some((option) => hasOptionBeforeTerminator(process.argv.slice(2), option))
 const program = new Command()
   .name("node-pirate")
   .description("Search API Bay with automatic endpoint failover in a modern OpenTUI interface.")
@@ -377,6 +377,7 @@ for (const name of ["search", "top"]) {
     .option("--max-age <duration>", "maximum upload age, e.g. 12h, 7d, or 2w")
     .option("--after <date>", "added on or after YYYY-MM-DD (UTC)")
     .option("--before <date>", "added on or before YYYY-MM-DD (UTC)")
+    .addOption(new Option("--jsonl", "emit one JSON result per line").conflicts(["json", "format", "ids", "magnets", "count"]))
     .addOption(new Option("--format <format>", "export csv or tsv with headers and byte sizes").choices(["csv", "tsv"]).conflicts(["json", "ids", "magnets", "count"]))
     .addOption(new Option("--count", "print the number of matches before offset and limit").conflicts(["json", "magnet", "ids", "magnets"]))
     .addOption(new Option("--ids", "print only one torrent ID per line").conflicts(["json", "magnet", "magnets"]))
@@ -391,9 +392,13 @@ Filtering:
   node-pirate ${name} ${name === "search" ? "debian" : "day"} --include amd64 --limit 5 --magnets`)
 }
 
-function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean; format?: "csv" | "tsv"; magnet?: boolean }): boolean {
-  if (!options.ids && !options.magnets && !options.count && !options.format) return false
+function printPlainResults(response: SearchResponse, options: { ids?: boolean; magnets?: boolean; count?: boolean; jsonl?: boolean; format?: "csv" | "tsv"; magnet?: boolean }): boolean {
+  if (!options.ids && !options.magnets && !options.count && !options.format && !options.jsonl) return false
   printPartialWarning(response)
+  if (options.jsonl) {
+    for (const torrent of response.results) console.log(JSON.stringify(serializeTorrent(torrent, options.magnet)))
+    return true
+  }
   if (options.format) {
     console.log(delimitedResults(response.results, options.format, options.magnet))
     return true
