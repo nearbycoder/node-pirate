@@ -43,7 +43,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Verify the npm toolchain
-        run: test "$(npm --version)" = "11.16.0"
+        run: test "$(npm --version)" = "11.19.1"
 
       - name: Verify registry signatures
         run: npm audit signatures
