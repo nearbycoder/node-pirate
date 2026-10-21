@@ -28,7 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: "24.18.0"
+          node-version: "24.22.1"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
@@ -54,7 +54,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Verify the npm toolchain
-        run: test "$(npm --version)" = "11.16.0"
+        run: test "$(npm --version)" = "11.19.1"
 
       - name: Verify registry signatures
         run: npm audit signatures
